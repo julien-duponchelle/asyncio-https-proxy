@@ -28,7 +28,8 @@ class HTTPRequest:
         if self.scheme == "https":
             if ":" not in path:
                 raise ValueError(f"Invalid CONNECT request line: {request_line!r}")
-            self.host, self.port = path.split(":")[0]
+            self.host, port_str = path.split(":", 1)
+            self.port = int(port_str)
         else:
             uri = urlparse(path)
             self.host = uri.hostname

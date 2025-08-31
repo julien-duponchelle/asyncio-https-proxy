@@ -1,2 +1,4 @@
 uv.lock
 .python-version
+.claude
+.pytest_cache .ruff_cache

@@ -13,14 +13,6 @@ dev = [
     "ruff>=0.12.11",
 ]
 
-[tool.uv.workspace]
-members = [
-    ".",
-]
-
-[tool.uv.sources]
-asyncio-https-proxy = { workspace = true }
-
 [tool.pytest.ini_options]
 pythonpath = [
   "src"

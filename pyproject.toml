@@ -1,0 +1,13 @@
+[project]
+name = "asyncio-https-proxy"
+version = "0.1.0"
+description = "Embeddable asyncio HTTPS forward proxy with request/response interception for Python applications"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "ruff>=0.12.11",
+]

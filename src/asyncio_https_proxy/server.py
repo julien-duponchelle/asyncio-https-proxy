@@ -43,7 +43,6 @@ async def start_proxy_server(
                 headers = await reader.readuntil(b"\r\n\r\n")
                 request.parse_headers(headers)
 
-                print(request)
                 proxy.client_reader = reader
                 proxy.client_writer = writer
                 proxy.request = request

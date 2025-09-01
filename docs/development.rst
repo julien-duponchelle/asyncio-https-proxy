@@ -24,5 +24,9 @@ Documentation
 
 The documentation is built using Sphinx. To build the documentation, navigate to the docs directory and run::
 
+
+In the docs directory, execute the following command::
     uv run make html
 
+Or to get live updates while editing the documentation::
+    uv run make livehtml

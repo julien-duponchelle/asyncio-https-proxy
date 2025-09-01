@@ -19,24 +19,23 @@ class BasicProxyHandler(HTTPSProxyHandler):
 
         # Forward the request to the target server using httpx
         remote = httpx.AsyncClient()
-        remote_response = await remote.request(
-            method=self.request.method,
-            url=str(self.request.url),
+        async with remote.stream(
+            self.request.method,
+            self.request.url,
             headers=self.request.headers.to_dict(),
-        )
+        ) as response:
+            print(f"Received response: {response.status_code} {response.reason_phrase}")
+            # Send the response back to the client
+            self.reply(
+                f"HTTP/1.1 {response.status_code} {response.reason_phrase}\r\n".encode()
+            )
+            # Forward all headers from the remote response to the client
+            for key, value in response.headers.items():
+                self.reply(f"{key}: {value}\r\n".encode())
+            self.reply(b"\r\n")
 
-        print(
-            f"Received response: {remote_response.status_code} {remote_response.reason_phrase}"
-        )
-        # Send the response back to the client
-        self.reply(
-            f"HTTP/1.1 {remote_response.status_code} {remote_response.reason_phrase}\r\n".encode()
-        )
-        for key, value in remote_response.headers.items():
-            self.reply(f"{key}: {value}\r\n".encode())
-        self.reply(b"\r\n")
-        self.reply(remote_response.content)
-        await self.flush()
+            async for chunk in response.aiter_bytes():
+                self.reply(chunk)
 
 
 async def main():

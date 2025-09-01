@@ -12,6 +12,13 @@ Setting Up the Development Environment
 You can use `uv` to set up a virtual environment for development.
 
 
+Running Tests
+----------------
+To run the test suite, use the following command::
+
+    uv run pytest tests/
+
+
 Documentation
 -----------------
 

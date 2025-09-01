@@ -1,20 +1,33 @@
 from urllib.parse import urlparse
+from .http_header import HTTPHeader
 
 
 class HTTPRequest:
+    """
+    Represents an HTTP request with methods to parse the request line and headers.
+    """
+
     host: str
+    """The target host of the HTTP request."""
     port: int
+    """The target port of the HTTP request."""
     scheme: str
+    """The scheme of the HTTP request, either 'http' or 'https'."""
     version: str
+    """The HTTP version, e.g. 'HTTP/1.1'."""
     method: str
-    # A list of (header, value) tuples to preserve order and allow duplicates
-    headers: list[tuple[str, str]]
+    """The HTTP method, e.g. 'GET', 'POST', 'CONNECT'."""
+    url: str
+    """The full URL of the HTTP request."""
+    headers: HTTPHeader
+    """The HTTP headers as an HTTPHeader object."""
 
     def parse_request_line(self, request_line: bytes):
         """
         Parse the request line of an HTTP request.
 
-        :param request_line: The request line as bytes, e.g. b"GET / HTTP/1.1"
+        Args:
+            request_line: The request line as bytes, e.g. b"GET / HTTP/1.1"
         """
         parts = request_line.decode().strip().split(" ")
         if len(parts) != 3:
@@ -32,6 +45,7 @@ class HTTPRequest:
             self.port = int(port_str)
         else:
             uri = urlparse(path)
+            self.url = path
             self.host = uri.hostname
             self.port = uri.port or 80
 
@@ -39,32 +53,10 @@ class HTTPRequest:
         """
         Parse raw HTTP headers from bytes.
 
-        :param raw_headers: Raw headers as bytes
+        Args:
+            raw_headers: Raw headers as bytes
         """
-        self.headers = []
-        header_lines = raw_headers.decode().split("\r\n")
-        for line in header_lines:
-            if line:
-                key, value = line.split(":", 1)
-                self.headers.append((key.strip(), value))
+        self.headers = HTTPHeader(raw_headers)
 
-    def get_first_header(self, key: str) -> str | None:
-        """
-        Get the first occurrence of a header by key (case-insensitive).
-        """
-        for k, v in self.headers:
-            if k.lower() == key.lower():
-                return v
-        return None
-
-    def to_raw_headers(self) -> bytes:
-        """
-        Convert headers back to raw bytes. Includes the final CRLF to indicate end of headers.
-        This can be used when forwarding the request to the target server.
-
-        :return: Raw headers as bytes.
-        """
-        return b"\r\n".join(f"{k}: {v}".encode() for k, v in self.headers) + b"\r\n\r\n"
-
-    def __str__(self):
+    def __repr__(self):
         return f"HTTPRequest(host={self.host}, port={self.port})"

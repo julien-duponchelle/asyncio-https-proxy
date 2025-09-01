@@ -14,7 +14,9 @@ author = "Julien Duponchelle"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "myst_parser"  # For Markdown support
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",  # For Google-style docstrings
+    "myst_parser",  # For Markdown support
 ]
 
 templates_path = ["_templates"]
@@ -24,7 +26,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "renku"
+html_theme = "piccolo_theme"
 html_static_path = ["_static"]
 
 

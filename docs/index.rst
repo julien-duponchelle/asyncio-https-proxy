@@ -14,6 +14,7 @@ Table of Contents
    :maxdepth: 1
 
    getting_started
+   api_reference
    development
    faq
 

@@ -17,8 +17,25 @@ class BasicProxyHandler(HTTPSProxyHandler):
         for key, value in self.request.headers:
             print(f"  {key}: {value}")
 
-        self.reply(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n")
-        self.reply(b"Hello from the basic HTTPS proxy!\n")
+        # Forward the request to the target server using httpx
+        remote = httpx.AsyncClient()
+        remote_response = await remote.request(
+            method=self.request.method,
+            url=str(self.request.url),
+            headers=self.request.headers.to_dict(),
+        )
+
+        print(
+            f"Received response: {remote_response.status_code} {remote_response.reason_phrase}"
+        )
+        # Send the response back to the client
+        self.reply(
+            f"HTTP/1.1 {remote_response.status_code} {remote_response.reason_phrase}\r\n".encode()
+        )
+        for key, value in remote_response.headers.items():
+            self.reply(f"{key}: {value}\r\n".encode())
+        self.reply(b"\r\n")
+        self.reply(remote_response.content)
         await self.flush()
 
 

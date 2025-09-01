@@ -6,6 +6,8 @@ This example shows how to set up a simple HTTPS proxy server.
 """
 
 import asyncio
+import httpx
+import ssl
 from asyncio_https_proxy import start_proxy_server, HTTPSProxyHandler
 
 
@@ -32,15 +34,14 @@ async def main():
     print(f"  curl --insecure --proxy http://{host}:{port} http://httpbin.org/get")
     print("\nPress Ctrl+C to stop the proxy")
 
-    def handler_builder():
-        return BasicProxyHandler()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile="examples/cert.pem", keyfile="examples/key.pem")
 
     server = await start_proxy_server(
-        handler_builder=handler_builder,
+        handler_builder=lambda: BasicProxyHandler(),
         host=host,
         port=port,
-        certfile="examples/cert.pem",
-        keyfile="examples/key.pem",
+        ssl_context=context,
     )
     async with server:
         try:

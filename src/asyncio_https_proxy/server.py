@@ -10,21 +10,16 @@ async def start_proxy_server(
     handler_builder: Callable[[], HTTPSProxyHandler],
     host: str,
     port: int,
-    certfile: str,
-    keyfile: str,
+    ssl_context: ssl.SSLContext,
 ) -> asyncio.Server:
     """
     Start the proxy server.
 
-    :param proxy: An instance of HTTPSProxy to handle requests.
+    :param handler_builder: A callable that returns a new instance of HTTPSProxyHandler.
     :param host: The host to bind the server to.
     :param port: The port to bind the server to.
+    :param ssl_context: The SSL context for secure connections.
     """
-
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile=certfile, keyfile=keyfile)
-
-    proxy = handler_builder()
 
     def proxy_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """
@@ -34,6 +29,7 @@ async def start_proxy_server(
         :raises ConnectionError: If the client disconnect
         :raises IncompleteReadError: If the headers are incomplete
         """
+        proxy = handler_builder()
 
         async def handle_connection():
             with closing(writer):

@@ -11,3 +11,6 @@ API Reference
     :undoc-members:
 
 
+.. autoclass:: asyncio_https_proxy.HTTPSProxyHandler
+    :members:
+    :undoc-members:

@@ -1,7 +1,6 @@
 import asyncio
 import pytest
 import ssl
-from unittest.mock import Mock
 from asyncio_https_proxy.server import start_proxy_server
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
 
@@ -20,20 +19,34 @@ class MockProxyHandler(HTTPSProxyHandler):
 
 
 @pytest.fixture
-def mock_ssl_context():
-    """Create a mock SSL context for testing without actual certificates"""
-    return Mock(spec=ssl.SSLContext)
+def server_ssl_context():
+    context = ssl.SSLContext(
+        ssl.PROTOCOL_TLS_SERVER,
+    )
+    context.load_verify_locations("tests/certs/ca.crt")
+    context.load_cert_chain("tests/certs/server.crt", "tests/certs/server.key")
+    return context
+
+
+@pytest.fixture
+def client_ssl_context():
+    context = ssl.SSLContext(
+        ssl.PROTOCOL_TLS_CLIENT,
+        purpose=ssl.Purpose.SERVER_AUTH,
+    )
+    context.load_verify_locations("tests/certs/ca.crt")
+    return context
 
 
 @pytest.mark.asyncio
-async def test_start_proxy_server(mock_ssl_context):
+async def test_start_proxy_server(server_ssl_context):
     """Test that the proxy server starts and returns a server instance"""
 
     server = await start_proxy_server(
         handler_builder=lambda: MockProxyHandler(),
         host="127.0.0.1",
         port=0,  # Let OS choose port
-        ssl_context=mock_ssl_context,
+        ssl_context=server_ssl_context,
     )
 
     assert server is not None
@@ -45,7 +58,7 @@ async def test_start_proxy_server(mock_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_get_request(mock_ssl_context):
+async def test_proxy_handles_get_request(server_ssl_context):
     """Test that the proxy can handle a GET request"""
     handler = MockProxyHandler()
 
@@ -56,7 +69,7 @@ async def test_proxy_handles_get_request(mock_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=mock_ssl_context,
+        ssl_context=server_ssl_context,
     )
 
     try:
@@ -73,6 +86,9 @@ async def test_proxy_handles_get_request(mock_ssl_context):
 
         # Give the server time to process
         await asyncio.sleep(0.1)
+
+        # Optionally, read response if needed (add timeout if reading)
+        # Example: response = await asyncio.wait_for(reader.readline(), timeout=1)
 
         # Verify the handler was called
         assert len(handler.connected_calls) == 1
@@ -93,7 +109,7 @@ async def test_proxy_handles_get_request(mock_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_connect_request(mock_ssl_context):
+async def test_proxy_handles_connect_request(server_ssl_context, client_ssl_context):
     """Test that the proxy can handle a CONNECT request (HTTPS tunneling)"""
     handler = MockProxyHandler()
 
@@ -104,43 +120,57 @@ async def test_proxy_handles_connect_request(mock_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=mock_ssl_context,
+        ssl_context=server_ssl_context,
     )
 
-    try:
-        server_host, server_port = server.sockets[0].getsockname()
+    server_host, server_port = server.sockets[0].getsockname()
 
-        reader, writer = await asyncio.open_connection(server_host, server_port)
+    reader, writer = await asyncio.open_connection(server_host, server_port)
 
-        # Send HTTP CONNECT request
-        request_data = (
-            b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"
-        )
-        writer.write(request_data)
-        await writer.drain()
+    # Send HTTP CONNECT request
+    request_data = b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"
+    writer.write(request_data)
+    await writer.drain()
 
-        await asyncio.sleep(0.1)
+    response = await asyncio.wait_for(reader.readline(), timeout=1)
 
-        # Verify the handler was called
-        assert len(handler.connected_calls) == 1
-        assert len(handler.requests) == 1
+    assert response == b"HTTP/1.1 200 Connection Established\r\n"
+    await asyncio.wait_for(reader.readline(), timeout=1)  # Read the empty line
 
-        request = handler.requests[0]
-        assert request.method == "CONNECT"
-        assert request.host == "example.com"
-        assert request.port == 443
-        assert request.version == "HTTP/1.1"
+    # SSL/TLS handshake
+    await writer.start_tls(
+        client_ssl_context,
+        server_hostname="example.com",
+    )
 
-        writer.close()
-        await writer.wait_closed()
+    # Send the proper HTTPS request
+    https_request = b"GET /secure HTTP/1.1\r\nHost: example.com\r\n\r\n"
+    writer.write(https_request)
+    await writer.drain()
 
-    finally:
-        server.close()
-        await server.wait_closed()
+    await asyncio.sleep(0.1)
+
+    # Verify the handler was called with the HTTPS request
+    assert len(handler.connected_calls) == 1
+    assert len(handler.requests) == 1
+
+    request = handler.requests[0]
+    assert request.method == "GET"
+    assert request.path == "/secure"
+    assert request.scheme == "https"
+    assert request.host == "example.com"
+    assert request.port == 443
+    assert request.version == "HTTP/1.1"
+
+    writer.close()
+    await writer.wait_closed()
+
+    server.close()
+    await server.wait_closed()
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_multiple_connections(mock_ssl_context):
+async def test_proxy_handles_multiple_connections(server_ssl_context):
     """Test that the proxy can handle multiple concurrent connections"""
     handler_calls = []
 
@@ -153,7 +183,7 @@ async def test_proxy_handles_multiple_connections(mock_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=mock_ssl_context,
+        ssl_context=server_ssl_context,
     )
 
     try:
@@ -188,7 +218,7 @@ async def test_proxy_handles_multiple_connections(mock_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_client_disconnect(mock_ssl_context):
+async def test_proxy_handles_client_disconnect(server_ssl_context):
     """Test that the proxy handles client disconnections gracefully"""
     handler = MockProxyHandler()
 
@@ -199,14 +229,14 @@ async def test_proxy_handles_client_disconnect(mock_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=mock_ssl_context,
+        ssl_context=server_ssl_context,
     )
 
     try:
         server_host, server_port = server.sockets[0].getsockname()
 
         # Connect and immediately disconnect without sending data
-        reader, writer = await asyncio.open_connection(server_host, server_port)
+        _, writer = await asyncio.open_connection(server_host, server_port)
         writer.close()
         await writer.wait_closed()
 

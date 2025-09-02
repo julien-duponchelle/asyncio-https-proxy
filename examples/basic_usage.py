@@ -16,12 +16,13 @@ class BasicProxyHandler(HTTPSProxyHandler):
         print(f"Client connected: {self.request}")
         for key, value in self.request.headers:
             print(f"  {key}: {value}")
+        print("Url:", self.request.url())
 
         # Forward the request to the target server using httpx
         remote = httpx.AsyncClient()
         async with remote.stream(
             self.request.method,
-            self.request.url,
+            self.request.url(),
             headers=self.request.headers.to_dict(),
         ) as response:
             print(f"Received response: {response.status_code} {response.reason_phrase}")

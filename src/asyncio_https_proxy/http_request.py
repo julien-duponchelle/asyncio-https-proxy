@@ -17,8 +17,8 @@ class HTTPRequest:
     """The HTTP version, e.g. 'HTTP/1.1'."""
     method: str
     """The HTTP method, e.g. 'GET', 'POST', 'CONNECT'."""
-    url: str
-    """The full URL of the HTTP request."""
+    path: str
+    """The path of the HTTP request, e.g. '/'."""
     headers: HTTPHeader
     """The HTTP headers as an HTTPHeader object."""
 
@@ -38,16 +38,14 @@ class HTTPRequest:
         else:
             self.scheme = "http"
 
-        if self.scheme == "https":
+        if self.method == "CONNECT":
             if ":" not in path:
                 raise ValueError(f"Invalid CONNECT request line: {request_line!r}")
             self.host, port_str = path.split(":", 1)
             self.port = int(port_str)
         else:
             uri = urlparse(path)
-            self.url = path
-            self.host = uri.hostname
-            self.port = uri.port or 80
+            self.path = uri.path
 
     def parse_headers(self, raw_headers: bytes):
         """
@@ -58,5 +56,34 @@ class HTTPRequest:
         """
         self.headers = HTTPHeader(raw_headers)
 
+    def parse_host(self):
+        """
+        Parse the Host header to set the host and port attributes.
+        """
+        host_header = self.headers.first("Host")
+        if host_header is None:
+            raise ValueError("Missing Host header in HTTP request")
+        if ":" in host_header:
+            self.host, port_str = host_header.split(":", 1)
+            self.port = int(port_str)
+        else:
+            self.host = host_header
+            if self.scheme == "https":
+                self.port = 443
+            else:
+                self.port = 80
+
+    def url(self) -> str:
+        """
+        Construct the full URL of the HTTP request.
+
+        Returns:
+            The full URL as a string
+        """
+        if self.port not in (80, 443):
+            return f"{self.scheme}://{self.host}:{self.port}{self.path}"
+        else:
+            return f"{self.scheme}://{self.host}{self.path}"
+
     def __repr__(self):
-        return f"HTTPRequest(host={self.host}, port={self.port})"
+        return f"HTTPRequest(host={self.host}, port={self.port}, scheme={self.scheme}, method={self.method}, path={self.path})"

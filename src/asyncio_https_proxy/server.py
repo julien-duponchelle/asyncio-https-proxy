@@ -6,6 +6,27 @@ import ssl
 from collections.abc import Callable
 
 
+async def _parse_request(reader: asyncio.StreamReader) -> HTTPRequest:
+    """
+    Parse an HTTP request from the given reader.
+
+    Args:
+        reader: An asyncio StreamReader to read the request from.
+
+    Returns:
+        An HTTPRequest object representing the parsed request.
+    """
+    request_line = await reader.readline()
+    if not request_line:
+        raise ConnectionError("Client disconnected before sending request line")
+    request = HTTPRequest()
+    request.parse_request_line(request_line)
+    headers = await reader.readuntil(b"\r\n\r\n")
+    request.parse_headers(headers)
+    request.parse_host()
+    return request
+
+
 async def start_proxy_server(
     handler_builder: Callable[[], HTTPSProxyHandler],
     host: str,
@@ -33,23 +54,28 @@ async def start_proxy_server(
 
         async def handle_connection():
             with closing(writer):
-                request_line = await reader.readline()
-                if not request_line:
-                    raise ConnectionError(
-                        "Client disconnected before sending request line"
-                    )
-                request = HTTPRequest()
-                request.parse_request_line(request_line)
-                headers = await reader.readuntil(b"\r\n\r\n")
-                request.parse_headers(headers)
+                initial_request = await _parse_request(reader)
 
                 proxy.client_reader = reader
                 proxy.client_writer = writer
-                proxy.request = request
+
+                if initial_request.method == "CONNECT":
+                    proxy.client_writer.write(
+                        b"HTTP/1.1 200 Connection Established\r\n\r\n"
+                    )
+                    await proxy.client_writer.drain()
+                    await proxy.client_writer.start_tls(
+                        ssl_context, server_hostname=initial_request.host
+                    )
+                    # Re-parse the request after TLS is established
+                    request = await _parse_request(proxy.client_reader)
+                    request.port = initial_request.port
+                    request.scheme = "https"
+                    proxy.request = request
+                else:
+                    proxy.request = initial_request
                 await proxy.client_connected()
 
         asyncio.create_task(handle_connection())
-
-        return proxy_handler
 
     return await asyncio.start_server(proxy_handler, host=host, port=port)

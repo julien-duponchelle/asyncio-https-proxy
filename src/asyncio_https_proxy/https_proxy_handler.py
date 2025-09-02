@@ -26,7 +26,9 @@ class HTTPSProxyHandler:
     def reply(self, content: bytes):
         """
         Send a reply to the client.
-        :param content: The content to send to the client.
+
+        Args:
+            content: The content to send to the client.
         """
         self.client_writer.write(content)
 

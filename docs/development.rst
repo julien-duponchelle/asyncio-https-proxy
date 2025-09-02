@@ -22,10 +22,9 @@ To run the test suite, use the following command::
 Documentation
 -----------------
 
-The documentation is built using Sphinx. To build the documentation, navigate to the docs directory and run::
+The documentation is built using Sphinx.
 
-
-In the docs directory, execute the following command::
+To build the documentation In the docs directory, execute the following command::
     uv run make html
 
 Or to get live updates while editing the documentation::

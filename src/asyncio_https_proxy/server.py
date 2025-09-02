@@ -2,7 +2,7 @@ import asyncio
 from contextlib import closing
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
 from asyncio_https_proxy.http_request import HTTPRequest
-import ssl
+from asyncio_https_proxy.tls_store import TLSStore
 from collections.abc import Callable
 
 
@@ -31,15 +31,15 @@ async def start_proxy_server(
     handler_builder: Callable[[], HTTPSProxyHandler],
     host: str,
     port: int,
-    ssl_context: ssl.SSLContext,
+    tls_store: TLSStore,
 ) -> asyncio.Server:
     """
     Start the proxy server.
 
-    :param handler_builder: A callable that returns a new instance of HTTPSProxyHandler.
-    :param host: The host to bind the server to.
-    :param port: The port to bind the server to.
-    :param ssl_context: The SSL context for secure connections.
+    Args:
+        handler_builder: A callable that returns a new instance of HTTPSProxyHandler.
+        host: The host to bind the server to.
+        port: The port to bind the server to.
     """
 
     def proxy_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -65,7 +65,8 @@ async def start_proxy_server(
                     )
                     await proxy.client_writer.drain()
                     await proxy.client_writer.start_tls(
-                        ssl_context, server_hostname=initial_request.host
+                        tls_store.get_ssl_context(initial_request.host),
+                        server_hostname=initial_request.host,
                     )
                     # Re-parse the request after TLS is established
                     request = await _parse_request(proxy.client_reader)

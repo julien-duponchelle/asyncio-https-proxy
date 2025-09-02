@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 import ssl
+import tempfile
 from asyncio_https_proxy.server import start_proxy_server
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
 
@@ -18,35 +19,34 @@ class MockProxyHandler(HTTPSProxyHandler):
         self.requests.append(self.request)
 
 
-@pytest.fixture
-def server_ssl_context():
-    context = ssl.SSLContext(
-        ssl.PROTOCOL_TLS_SERVER,
-    )
-    context.load_verify_locations("tests/certs/ca.crt")
-    context.load_cert_chain("tests/certs/server.crt", "tests/certs/server.key")
-    return context
+@pytest.fixture(scope="module")
+def tls_store():
+    from asyncio_https_proxy.tls_store import TLSStore
+
+    return TLSStore()
 
 
 @pytest.fixture
-def client_ssl_context():
-    context = ssl.SSLContext(
-        ssl.PROTOCOL_TLS_CLIENT,
-        purpose=ssl.Purpose.SERVER_AUTH,
-    )
-    context.load_verify_locations("tests/certs/ca.crt")
+def client_ssl_context(tls_store):
+    """Create an SSL context for the client that trusts the proxy's CA"""
+    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    pem = tls_store.get_ca_pem()
+    with tempfile.NamedTemporaryFile() as temp_cert_file:
+        temp_cert_file.write(pem)
+        temp_cert_file.flush()
+        context.load_verify_locations(cafile=temp_cert_file.name)
     return context
 
 
 @pytest.mark.asyncio
-async def test_start_proxy_server(server_ssl_context):
+async def test_start_proxy_server(tls_store):
     """Test that the proxy server starts and returns a server instance"""
 
     server = await start_proxy_server(
         handler_builder=lambda: MockProxyHandler(),
         host="127.0.0.1",
         port=0,  # Let OS choose port
-        ssl_context=server_ssl_context,
+        tls_store=tls_store,
     )
 
     assert server is not None
@@ -58,7 +58,7 @@ async def test_start_proxy_server(server_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_get_request(server_ssl_context):
+async def test_proxy_handles_get_request(tls_store):
     """Test that the proxy can handle a GET request"""
     handler = MockProxyHandler()
 
@@ -69,7 +69,7 @@ async def test_proxy_handles_get_request(server_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=server_ssl_context,
+        tls_store=tls_store,
     )
 
     try:
@@ -109,7 +109,7 @@ async def test_proxy_handles_get_request(server_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_connect_request(server_ssl_context, client_ssl_context):
+async def test_proxy_handles_connect_request(tls_store, client_ssl_context):
     """Test that the proxy can handle a CONNECT request (HTTPS tunneling)"""
     handler = MockProxyHandler()
 
@@ -120,7 +120,7 @@ async def test_proxy_handles_connect_request(server_ssl_context, client_ssl_cont
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=server_ssl_context,
+        tls_store=tls_store,
     )
 
     server_host, server_port = server.sockets[0].getsockname()
@@ -170,7 +170,7 @@ async def test_proxy_handles_connect_request(server_ssl_context, client_ssl_cont
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_multiple_connections(server_ssl_context):
+async def test_proxy_handles_multiple_connections(tls_store):
     """Test that the proxy can handle multiple concurrent connections"""
     handler_calls = []
 
@@ -183,7 +183,7 @@ async def test_proxy_handles_multiple_connections(server_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=server_ssl_context,
+        tls_store=tls_store,
     )
 
     try:
@@ -218,7 +218,7 @@ async def test_proxy_handles_multiple_connections(server_ssl_context):
 
 
 @pytest.mark.asyncio
-async def test_proxy_handles_client_disconnect(server_ssl_context):
+async def test_proxy_handles_client_disconnect(tls_store):
     """Test that the proxy handles client disconnections gracefully"""
     handler = MockProxyHandler()
 
@@ -229,7 +229,7 @@ async def test_proxy_handles_client_disconnect(server_ssl_context):
         handler_builder=handler_builder,
         host="127.0.0.1",
         port=0,
-        ssl_context=server_ssl_context,
+        tls_store=tls_store,
     )
 
     try:

@@ -7,7 +7,14 @@ An embeddable asyncio-based HTTPS forward proxy with request/response intercepti
 from .https_proxy_handler import HTTPSProxyHandler
 from .http_header import HTTPHeader
 from .http_request import HTTPRequest
+from .tls_store import TLSStore
 from .server import start_proxy_server
 
 __version__ = "0.1.0"
-__all__ = ["start_proxy_server", "HTTPSProxyHandler", "HTTPHeader", "HTTPRequest"]
+__all__ = [
+    "start_proxy_server",
+    "HTTPSProxyHandler",
+    "HTTPHeader",
+    "HTTPRequest",
+    "TLSStore",
+]

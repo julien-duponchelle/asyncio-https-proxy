@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Embeddable asyncio HTTPS forward proxy with request/response interception for Python applications"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "cryptography>=45.0.7",
+]
 
 [dependency-groups]
 dev = [

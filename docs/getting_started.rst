@@ -80,6 +80,7 @@ The library doesn't include the forwarding logic, so you need to implement it yo
 This provides flexibility to handle requests as needed.
 
 .. code-block:: python
+
    import httpx
 
    class BasicProxyHandler(HTTPSProxyHandler):

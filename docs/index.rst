@@ -14,6 +14,7 @@ Table of Contents
    :maxdepth: 1
 
    getting_started
+   custom_ca
    api_reference
    development
    faq

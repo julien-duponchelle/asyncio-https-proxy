@@ -8,6 +8,9 @@ import ssl
 import tempfile
 
 
+CERTIFICATE_VALIDITY_DAYS = 365 * 100
+
+
 class TLSStore:
     """
     A simple in-memory TLS store that generates a CA and signs certificates for domains on the fly.
@@ -38,7 +41,7 @@ class TLSStore:
             .not_valid_after(
                 # Our certificate will be valid for ~10 years
                 datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(days=365 * 10)
+                + datetime.timedelta(days=CERTIFICATE_VALIDITY_DAYS)
             )
             .add_extension(
                 x509.BasicConstraints(ca=True, path_length=None),
@@ -88,7 +91,7 @@ class TLSStore:
             .not_valid_after(
                 # Our cert will be valid for 10 days
                 datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(days=10)
+                + datetime.timedelta(days=CERTIFICATE_VALIDITY_DAYS)
             )
             .add_extension(
                 x509.SubjectAlternativeName(

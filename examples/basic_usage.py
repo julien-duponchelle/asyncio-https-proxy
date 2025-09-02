@@ -34,6 +34,7 @@ class BasicProxyHandler(HTTPSProxyHandler):
                 self.reply(f"{key}: {value}\r\n".encode())
             self.reply(b"\r\n")
 
+            # Stream the response body in chunks
             async for chunk in response.aiter_bytes():
                 self.reply(chunk)
 
@@ -50,6 +51,7 @@ async def main():
     print(f"  curl --insecure --proxy http://{host}:{port} http://httpbin.org/get")
     print("\nPress Ctrl+C to stop the proxy")
 
+    # Initialize the TLS store with a self-signed CA certificate
     tls_store = TLSStore()
 
     server = await start_proxy_server(

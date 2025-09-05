@@ -219,4 +219,4 @@ Now that you have a working proxy, you can:
 - Build web scraping or testing tools
 - Create security analysis tools
 
-For more advanced usage, see the :doc:`api_reference`.
+For more advanced usage, see the :doc:`api/index`.

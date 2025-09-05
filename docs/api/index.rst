@@ -6,10 +6,13 @@ API Reference
 Classes
 ----------------
 
-* :doc:`api/http_request`
-* :doc:`api/http_header`
-* :doc:`api/https_proxy_handler`
-* :doc:`api/tls_store`
+.. toctree::
+   :maxdepth: 1
+
+   http_request
+   http_header
+   https_proxy_handler
+   tls_store
 
 
 

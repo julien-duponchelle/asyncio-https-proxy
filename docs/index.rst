@@ -15,7 +15,7 @@ Table of Contents
 
    getting_started
    custom_ca
-   api_reference
+   api/index
    development
    faq
 

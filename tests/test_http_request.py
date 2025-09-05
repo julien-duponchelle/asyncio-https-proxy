@@ -45,7 +45,7 @@ class TestHTTPRequest:
         request = HTTPRequest()
         request.parse_request_line(b"GET /path HTTP/1.1")
         request.parse_headers(b"\r\n\r\n")
-        
+
         with pytest.raises(ValueError, match="Missing Host header"):
             request.parse_host()
 
@@ -54,7 +54,7 @@ class TestHTTPRequest:
         request.parse_request_line(b"GET /path HTTP/1.1")
         request.parse_headers(b"Host: example.com:9000\r\n\r\n")
         request.parse_host()
-        
+
         assert request.host == "example.com"
         assert request.port == 9000
 
@@ -64,7 +64,7 @@ class TestHTTPRequest:
         request.scheme = "https"
         request.parse_headers(b"Host: example.com\r\n\r\n")
         request.parse_host()
-        
+
         assert request.host == "example.com"
         assert request.port == 443
 
@@ -73,7 +73,7 @@ class TestHTTPRequest:
         request.parse_request_line(b"GET /path HTTP/1.1")
         request.parse_headers(b"Host: example.com\r\n\r\n")
         request.parse_host()
-        
+
         assert request.url() == "http://example.com/path"
 
     def test_url_method_custom_port(self):
@@ -81,7 +81,7 @@ class TestHTTPRequest:
         request.parse_request_line(b"GET /path HTTP/1.1")
         request.parse_headers(b"Host: example.com:8080\r\n\r\n")
         request.parse_host()
-        
+
         assert request.url() == "http://example.com:8080/path"
 
     def test_url_method_https(self):
@@ -90,7 +90,7 @@ class TestHTTPRequest:
         request.scheme = "https"
         request.parse_headers(b"Host: example.com\r\n\r\n")
         request.parse_host()
-        
+
         assert request.url() == "https://example.com/path"
 
     def test_http_request_default_port(self):
@@ -107,4 +107,7 @@ class TestHTTPRequest:
         request.parse_headers(b"Host: example.com:8080\r\n\r\n")
         request.parse_host()
 
-        assert repr(request) == "HTTPRequest(host=example.com, port=8080, scheme=http, method=GET, path=/path)"
+        assert (
+            repr(request)
+            == "HTTPRequest(host=example.com, port=8080, scheme=http, method=GET, path=/path)"
+        )

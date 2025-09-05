@@ -42,7 +42,9 @@ async def start_proxy_server(
         port: The port to bind the server to.
     """
 
-    def create_connection_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    def create_connection_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         """
         Create a handler for incoming proxy connections.
 

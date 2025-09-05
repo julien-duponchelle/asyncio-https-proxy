@@ -1,124 +1,222 @@
-Getting started
-=================
+Getting Started
+===============
+
+This guide will walk you through setting up and using asyncio-https-proxy to create your own HTTPS proxy server with request/response interception capabilities.
 
 .. toctree::
    :maxdepth: 2
 
+Overview
+--------
+
+asyncio-https-proxy is an embeddable, asyncio-based HTTPS forward proxy server that allows you to intercept, modify, and analyze HTTP and HTTPS traffic. Unlike standalone proxy servers, this library is designed to be integrated directly into your Python applications.
+
+Key Concepts
+~~~~~~~~~~~~
+
+**HTTPS Interception**
+  The proxy can intercept HTTPS traffic by acting as a man-in-the-middle. It generates certificates on-the-fly using its own Certificate Authority (CA).
+
+**Handler-Based Architecture**
+  You implement a custom handler class that extends :doc:`api/https_proxy_handler` to define how requests and responses are processed.
+
+**Asyncio Native**
+  Built using Python's asyncio framework for high-performance, non-blocking operations.
+
+Prerequisites
+-------------
+
+**Python Version**
+  Requires Python 3.13 or later.
+
+**Dependencies**
+  - ``cryptography`` - For TLS/SSL certificate generation and handling (installed automatically)
+
 Installation
-----------------
-To install the package, use pip:
+------------
+
+**Basic Installation**
+
+Install the package using pip:
 
 .. code-block:: console
 
    $ pip install asyncio-https-proxy
 
 
-Basic Usage
-----------------
+Quick Start
+-----------
 
-Here's a simple example of how to use the package:
+Here's a complete working example that creates a basic HTTPS proxy server that use HTTPX to forward requests.
 
-First, import the necessary components:
+**Step 1: Create the Handler**
+
+First, create a custom handler that extends :doc:`api/https_proxy_handler`:
+
 .. code-block:: python
 
    import asyncio
+   import httpx
    from asyncio_https_proxy import start_proxy_server, HTTPSProxyHandler, TLSStore
 
 
-First, create a TLS store to manage your certificates:
+   class BasicProxyHandler(HTTPSProxyHandler):
+       """A basic proxy handler that forwards requests and logs activity."""
+       
+       async def on_client_connected(self):
+           """Called when a client connects to the proxy."""
+           print(f"Client connected: {self.request.method} {self.request.url()}")
 
-.. code-block:: python
+       async def on_request_received(self):
+           """Called when a complete request has been received from the client."""
+           # Log request headers
+           print("Request Headers:")
+           for key, value in self.request.headers:
+               print(f"  {key}: {value}")
+           
+           # Forward the request to the target server
+           await self._forward_request()
+       
+       async def _forward_request(self):
+           """Forward the request to the target server and relay the response."""
+           try:
+               # Create HTTP client for forwarding requests
+               async with httpx.AsyncClient() as client:
+                   # Forward the request with all original headers and body
+                   async with client.stream(
+                       method=self.request.method,
+                       url=self.request.url(),
+                       headers=self.request.headers.to_dict(),
+                       content=self.read_request_body(),  # Stream request body
+                   ) as response:
+                       print(f"Response: {response.status_code} {response.reason_phrase}")
+                       
+                       # Send response status line
+                       self.write_response(
+                           f"HTTP/1.1 {response.status_code} {response.reason_phrase}\\r\\n".encode()
+                       )
+                       
+                       # Forward response headers
+                       for key, value in response.headers.items():
+                           self.write_response(f"{key}: {value}\\r\\n".encode())
+                       self.write_response(b"\\r\\n")
+                       
+                       # Stream response body
+                       async for chunk in response.aiter_bytes():
+                           self.write_response(chunk)
+                           
+           except Exception as e:
+               print(f"Error forwarding request: {e}")
+               # Send error response
+               self.write_response(b"HTTP/1.1 500 Internal Server Error\\r\\n\\r\\n")
+               self.write_response(f"Proxy Error: {str(e)}".encode())
 
-   tls_store = TLSStore()
+**Step 2: Start the Proxy Server**
 
-Once initialized, a certificate authority (CA) certificate will be generated.
-This CA certificate will be used to sign the certificates for the domains you proxy.
-
-Next, you can create the main loop to start the proxy server:
+Create the main function to start your proxy:
 
 .. code-block:: python
 
    async def main():
-      """Run a basic HTTPS proxy server."""
-
-      host = "127.0.0.1"
-      port = 8888
-
-      print(f"Starting HTTPS proxy on {host}:{port}")
-      print("\nTest the proxy with:")
-      print(f"  curl --insecure --proxy http://{host}:{port} https://httpbin.org/get")
-      print(f"  curl --insecure --proxy http://{host}:{port} http://httpbin.org/get")
-      print("\nPress Ctrl+C to stop the proxy")
-
-      # Initialize the TLS store with a self-signed CA certificate
-      tls_store = TLSStore()
-
-      server = await start_proxy_server(
-         handler_builder=lambda: BasicProxyHandler(),
-         host=host,
-         port=port,
-         tls_store=tls_store,
-      )
-      async with server:
-         try:
+       """Start the HTTPS proxy server."""
+       
+       # Configuration
+       host = "127.0.0.1"
+       port = 8888
+       
+       print(f"Starting HTTPS proxy on {host}:{port}")
+       print("\\nThe proxy will intercept both HTTP and HTTPS traffic.")
+       print("For HTTPS, it generates certificates on-the-fly using a built-in CA.")
+       
+       # Initialize TLS store (creates CA certificate automatically)
+       tls_store = TLSStore()
+       print(f"\\nGenerated CA certificate. Clients may show security warnings.")
+       print("Use --insecure with curl")
+       
+       # Start the proxy server
+       server = await start_proxy_server(
+           handler_builder=lambda: BasicProxyHandler(),
+           host=host,
+           port=port,
+           tls_store=tls_store,
+       )
+       
+       print(f"\\nProxy server started. Test with:")
+       print(f"  curl --insecure --proxy http://{host}:{port} https://httpbin.org/get")
+       print("\\nPress Ctrl+C to stop...")
+       
+       # Run the server
+       async with server:
+           try:
                await server.serve_forever()
-         except KeyboardInterrupt:
-               print("Shutting down proxy...")
+           except KeyboardInterrupt:
+               print("\\nShutting down proxy server...")
+           finally:
                server.close()
                await server.wait_closed()
-               print("Proxy shut down.")
+               print("Proxy server stopped.")
 
 
    if __name__ == "__main__":
-      asyncio.run(main())
+       asyncio.run(main())
 
+Testing Your Proxy
+-------------------
 
-Now you need to implement the `BasicProxyHandler` class that extends `HTTPSProxyHandler`.
-In this example, the handler will log the incoming requests and forward them to the target server using `httpx`.
-
-The library doesn't include the forwarding logic, so you need to implement it yourself.
-This provides flexibility to handle requests as needed.
-
-.. code-block:: python
-
-   import httpx
-
-   class BasicProxyHandler(HTTPSProxyHandler):
-    async def on_client_connected(self):
-        print(f"Client connected: {self.request}")
-
-    async def on_request_received(self):
-        for key, value in self.request.headers:
-            print(f"  {key}: {value}")
-        print("Url:", self.request.url())
-
-        # Forward the request to the target server using httpx
-        remote = httpx.AsyncClient()
-        async with remote.stream(
-            self.request.method,
-            self.request.url(),
-            headers=self.request.headers.to_dict(),
-            content=self.read_request_body(),
-        ) as response:
-            print(f"Received response: {response.status_code} {response.reason_phrase}")
-            # Send the response back to the client
-            self.write_response(
-                f"HTTP/1.1 {response.status_code} {response.reason_phrase}\r\n".encode()
-            )
-            # Forward all headers from the remote response to the client
-            for key, value in response.headers.items():
-                self.write_response(f"{key}: {value}\r\n".encode())
-            self.write_response(b"\r\n")
-
-            # Stream the response body in chunks
-            async for chunk in response.aiter_bytes():
-                self.write_response(chunk)
-
-Once you have the proxy server running, you can test it using curl:
+**Test HTTP Requests**
 
 .. code-block:: console
 
-   $ curl --insecure --proxy http://127.0.0.1:8888 https://example.com 
+   $ curl --proxy http://127.0.0.1:8888 http://httpbin.org/get
 
-The usage of `--insecure` is necessary because the proxy uses a self-signed certificate otherwise curl will reject the connection.
-We will cover how to trust the CA certificate in the next section.
+Expected output shows the JSON response from httpbin.org, and your proxy will log:
+
+.. code-block:: text
+
+   Client connected: GET http://httpbin.org/get
+   Request Headers:
+     Host: httpbin.org
+     User-Agent: curl/7.68.0
+     Accept: */*
+   Response: 200 OK
+
+**Test HTTPS Requests**
+
+.. code-block:: console
+
+   $ curl --insecure --proxy http://127.0.0.1:8888 https://httpbin.org/get
+
+The ``--insecure`` flag is needed because the proxy uses a self-signed CA certificate. You should see similar output as above.
+
+**Test with Browser**
+
+Configure your browser to use ``127.0.0.1:8888`` as an HTTP proxy. You'll need to accept security warnings for HTTPS sites due to the self-signed certificates.
+
+Understanding the Handler Lifecycle
+------------------------------------
+
+The ``HTTPSProxyHandler`` has a well-defined lifecycle:
+
+1. **Client Connection**: When a client connects, ``on_client_connected()`` is called
+2. **Request Parsing**: The server parses the HTTP request and assigns it to ``self.request``
+3. **Request Processing**: ``on_request_received()`` is called with the complete request
+4. **Response Generation**: Your handler processes the request and writes the response
+5. **Connection Cleanup**: The connection is automatically cleaned up
+
+
+See the :doc:`api/https_proxy_handler` for more details on available methods and attributes.
+And :doc:`api/http_request` for request structure.
+
+
+Next Steps
+----------
+
+Now that you have a working proxy, you can:
+
+- Implement custom request/response modification logic
+- Add authentication and access control
+- Integrate with logging and monitoring systems  
+- Build web scraping or testing tools
+- Create security analysis tools
+
+For more advanced usage, see the :doc:`api_reference`.

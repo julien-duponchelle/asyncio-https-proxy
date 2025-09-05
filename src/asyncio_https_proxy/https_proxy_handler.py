@@ -9,15 +9,14 @@ class HTTPSProxyHandler:
     An instance of a connection from a client to the HTTPS proxy server
 
     Each new client connection will create a new instance of this class.
-    
-    Attributes:
-        client_reader: StreamReader for reading data from the client
-        client_writer: StreamWriter for writing data to the client
-        request: The parsed HTTP request from the client (set by the server)
     """
 
     client_reader: asyncio.StreamReader
+    """StreamReader for reading data from the client"""
     client_writer: asyncio.StreamWriter
+    """StreamWriter for writing data to the client"""
+    request: "HTTPRequest"
+    """The parsed HTTP request from the client (set by the server)"""
 
     async def on_client_connected(
         self,

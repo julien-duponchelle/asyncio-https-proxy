@@ -76,6 +76,7 @@ async def start_proxy_server(
                 else:
                     proxy.request = initial_request
                 await proxy.client_connected()
+                await proxy.request_received()
 
         asyncio.create_task(handle_connection())
 

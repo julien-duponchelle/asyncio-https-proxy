@@ -13,6 +13,8 @@ from asyncio_https_proxy import start_proxy_server, HTTPSProxyHandler, TLSStore
 class BasicProxyHandler(HTTPSProxyHandler):
     async def client_connected(self):
         print(f"Client connected: {self.request}")
+
+    async def request_received(self):
         for key, value in self.request.headers:
             print(f"  {key}: {value}")
         print("Url:", self.request.url())
@@ -23,6 +25,7 @@ class BasicProxyHandler(HTTPSProxyHandler):
             self.request.method,
             self.request.url(),
             headers=self.request.headers.to_dict(),
+            content=self.read_request_body(),
         ) as response:
             print(f"Received response: {response.status_code} {response.reason_phrase}")
             # Send the response back to the client

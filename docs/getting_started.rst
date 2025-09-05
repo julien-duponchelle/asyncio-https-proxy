@@ -84,32 +84,35 @@ This provides flexibility to handle requests as needed.
    import httpx
 
    class BasicProxyHandler(HTTPSProxyHandler):
-      async def client_connected(self):
-         print(f"Client connected: {self.request}")
-         for key, value in self.request.headers:
-               print(f"  {key}: {value}")
-         print("Url:", self.request.url())
+    async def client_connected(self):
+        print(f"Client connected: {self.request}")
 
-         # Forward the request to the target server using httpx
-         remote = httpx.AsyncClient()
-         async with remote.stream(
-               self.request.method,
-               self.request.url(),
-               headers=self.request.headers.to_dict(),
-         ) as response:
-               print(f"Received response: {response.status_code} {response.reason_phrase}")
-               # Send the response back to the client
-               self.reply(
-                  f"HTTP/1.1 {response.status_code} {response.reason_phrase}\r\n".encode()
-               )
-               # Forward all headers from the remote response to the client
-               for key, value in response.headers.items():
-                  self.reply(f"{key}: {value}\r\n".encode())
-               self.reply(b"\r\n")
+    async def request_received(self):
+        for key, value in self.request.headers:
+            print(f"  {key}: {value}")
+        print("Url:", self.request.url())
 
-               # Stream the response body in chunks
-               async for chunk in response.aiter_bytes():
-                  self.reply(chunk)
+        # Forward the request to the target server using httpx
+        remote = httpx.AsyncClient()
+        async with remote.stream(
+            self.request.method,
+            self.request.url(),
+            headers=self.request.headers.to_dict(),
+            content=self.read_request_body(),
+        ) as response:
+            print(f"Received response: {response.status_code} {response.reason_phrase}")
+            # Send the response back to the client
+            self.reply(
+                f"HTTP/1.1 {response.status_code} {response.reason_phrase}\r\n".encode()
+            )
+            # Forward all headers from the remote response to the client
+            for key, value in response.headers.items():
+                self.reply(f"{key}: {value}\r\n".encode())
+            self.reply(b"\r\n")
+
+            # Stream the response body in chunks
+            async for chunk in response.aiter_bytes():
+                self.reply(chunk)
 
 Once you have the proxy server running, you can test it using curl:
 

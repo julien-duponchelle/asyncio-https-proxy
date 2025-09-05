@@ -1,6 +1,5 @@
 import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import AsyncMock
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
 from asyncio_https_proxy.http_request import HTTPRequest
 from asyncio_https_proxy.http_header import HTTPHeader

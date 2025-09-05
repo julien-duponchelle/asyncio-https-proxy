@@ -1,4 +1,5 @@
 from typing import AsyncIterator
+from .http_request import HTTPRequest
 import asyncio
 
 MAX_CHUNK_SIZE = 4096
@@ -15,7 +16,7 @@ class HTTPSProxyHandler:
     """StreamReader for reading data from the client"""
     client_writer: asyncio.StreamWriter
     """StreamWriter for writing data to the client"""
-    request: "HTTPRequest"
+    request: HTTPRequest
     """The parsed HTTP request from the client (set by the server)"""
 
     async def on_client_connected(

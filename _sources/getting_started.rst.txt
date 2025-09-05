@@ -128,11 +128,10 @@ Create the main function to start your proxy:
        print("\\nThe proxy will intercept both HTTP and HTTPS traffic.")
        print("For HTTPS, it generates certificates on-the-fly using a built-in CA.")
        
-       # Initialize TLS store - this automatically generates a new CA certificate
-       # The CA (Certificate Authority) is used to sign certificates for intercepted domains
+       # Initialize TLS store (creates CA certificate automatically)
        tls_store = TLSStore()
-       print(f"\\nGenerated new CA certificate. Clients may show security warnings.")
-       print("Use --insecure with curl or install the CA certificate in your trust store.")
+       print(f"\\nGenerated CA certificate. Clients may show security warnings.")
+       print("Use --insecure with curl")
        
        # Start the proxy server
        server = await start_proxy_server(
@@ -208,66 +207,6 @@ The ``HTTPSProxyHandler`` has a well-defined lifecycle:
 See the :doc:`api/https_proxy_handler` for more details on available methods and attributes.
 And :doc:`api/http_request` for request structure.
 
-Advanced Configuration
-----------------------
-
-**CA Certificate Management**
-
-By default, ``TLSStore()`` automatically generates a new Certificate Authority (CA) certificate and private key each time it's initialized. This CA is used to sign certificates for domains you intercept.
-
-**Using an Existing CA Certificate**
-
-If you have an existing CA certificate and key, you can provide them to avoid generating new ones:
-
-.. code-block:: python
-
-   # Load your existing CA certificate and key from files
-   with open("my_ca.crt", "rb") as f:
-       ca_cert_pem = f.read()
-   
-   with open("my_ca.key", "rb") as f:
-       ca_key_pem = f.read()
-   
-   # Initialize TLS store with existing CA
-   tls_store = TLSStore(ca_cert_pem=ca_cert_pem, ca_key_pem=ca_key_pem)
-
-**Saving Generated CA for Reuse**
-
-If you want to reuse the same CA across multiple runs (to avoid certificate warnings):
-
-.. code-block:: python
-
-   # Generate CA once and save it
-   tls_store = TLSStore()  # Generates new CA
-   
-   # Save CA certificate and key for later reuse
-   with open("generated_ca.crt", "wb") as f:
-       f.write(tls_store.get_ca_pem())
-   
-   with open("generated_ca.key", "wb") as f:
-       f.write(tls_store.get_ca_key_pem())
-   
-   print("CA certificate and key saved. Install generated_ca.crt in your trust store.")
-
-**Installing CA Certificate in Trust Store**
-
-To avoid ``--insecure`` warnings, install the CA certificate in your system's trust store:
-
-.. code-block:: python
-
-   # Extract the CA certificate for installation
-   tls_store = TLSStore()
-   ca_pem = tls_store.get_ca_pem()
-   
-   # Save to file for installation
-   with open("proxy_ca.crt", "wb") as f:
-       f.write(ca_pem)
-
-Then add ``proxy_ca.crt`` to your system's certificate trust store:
-
-- **Linux**: Copy to ``/usr/local/share/ca-certificates/`` and run ``sudo update-ca-certificates``
-- **macOS**: Use Keychain Access to add the certificate to System keychain
-- **Windows**: Use ``certmgr.msc`` to add to Trusted Root Certification Authorities
 
 Next Steps
 ----------

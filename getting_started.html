@@ -251,11 +251,10 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">nThe proxy will intercept both HTTP and HTTPS traffic.&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;For HTTPS, it generates certificates on-the-fly using a built-in CA.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Initialize TLS store - this automatically generates a new CA certificate</span>
-    <span class="c1"># The CA (Certificate Authority) is used to sign certificates for intercepted domains</span>
+    <span class="c1"># Initialize TLS store (creates CA certificate automatically)</span>
     <span class="n">tls_store</span> <span class="o">=</span> <span class="n">TLSStore</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">nGenerated new CA certificate. Clients may show security warnings.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Use --insecure with curl or install the CA certificate in your trust store.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">nGenerated CA certificate. Clients may show security warnings.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Use --insecure with curl&quot;</span><span class="p">)</span>
 
     <span class="c1"># Start the proxy server</span>
     <span class="n">server</span> <span class="o">=</span> <span class="k">await</span> <span class="n">start_proxy_server</span><span class="p">(</span>
@@ -322,56 +321,6 @@ Response: 200 OK
 <p>See the <a class="reference internal" href="api/https_proxy_handler.html"><span class="doc">HTTPSProxyHandler</span></a> for more details on available methods and attributes.
 And <a class="reference internal" href="api/http_request.html"><span class="doc">HTTPRequest</span></a> for request structure.</p>
 </section>
-<section id="advanced-configuration">
-<h2>Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Link to this heading">¶</a></h2>
-<p><strong>CA Certificate Management</strong></p>
-<p>By default, <code class="docutils literal notranslate"><span class="pre">TLSStore()</span></code> automatically generates a new Certificate Authority (CA) certificate and private key each time it’s initialized. This CA is used to sign certificates for domains you intercept.</p>
-<p><strong>Using an Existing CA Certificate</strong></p>
-<p>If you have an existing CA certificate and key, you can provide them to avoid generating new ones:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load your existing CA certificate and key from files</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_ca.crt&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">ca_cert_pem</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_ca.key&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">ca_key_pem</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-<span class="c1"># Initialize TLS store with existing CA</span>
-<span class="n">tls_store</span> <span class="o">=</span> <span class="n">TLSStore</span><span class="p">(</span><span class="n">ca_cert_pem</span><span class="o">=</span><span class="n">ca_cert_pem</span><span class="p">,</span> <span class="n">ca_key_pem</span><span class="o">=</span><span class="n">ca_key_pem</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>Saving Generated CA for Reuse</strong></p>
-<p>If you want to reuse the same CA across multiple runs (to avoid certificate warnings):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate CA once and save it</span>
-<span class="n">tls_store</span> <span class="o">=</span> <span class="n">TLSStore</span><span class="p">()</span>  <span class="c1"># Generates new CA</span>
-
-<span class="c1"># Save CA certificate and key for later reuse</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;generated_ca.crt&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tls_store</span><span class="o">.</span><span class="n">get_ca_pem</span><span class="p">())</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;generated_ca.key&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tls_store</span><span class="o">.</span><span class="n">get_ca_key_pem</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CA certificate and key saved. Install generated_ca.crt in your trust store.&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>Installing CA Certificate in Trust Store</strong></p>
-<p>To avoid <code class="docutils literal notranslate"><span class="pre">--insecure</span></code> warnings, install the CA certificate in your system’s trust store:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract the CA certificate for installation</span>
-<span class="n">tls_store</span> <span class="o">=</span> <span class="n">TLSStore</span><span class="p">()</span>
-<span class="n">ca_pem</span> <span class="o">=</span> <span class="n">tls_store</span><span class="o">.</span><span class="n">get_ca_pem</span><span class="p">()</span>
-
-<span class="c1"># Save to file for installation</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;proxy_ca.crt&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ca_pem</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Then add <code class="docutils literal notranslate"><span class="pre">proxy_ca.crt</span></code> to your system’s certificate trust store:</p>
-<ul class="simple">
-<li><p><strong>Linux</strong>: Copy to <code class="docutils literal notranslate"><span class="pre">/usr/local/share/ca-certificates/</span></code> and run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">update-ca-certificates</span></code></p></li>
-<li><p><strong>macOS</strong>: Use Keychain Access to add the certificate to System keychain</p></li>
-<li><p><strong>Windows</strong>: Use <code class="docutils literal notranslate"><span class="pre">certmgr.msc</span></code> to add to Trusted Root Certification Authorities</p></li>
-</ul>
-</section>
 <section id="next-steps">
 <h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
 <p>Now that you have a working proxy, you can:</p>
@@ -410,7 +359,6 @@ And <a class="reference internal" href="api/http_request.html"><span class="doc"
 <li><a class="reference internal" href="#quick-start">Quick Start</a></li>
 <li><a class="reference internal" href="#testing-your-proxy">Testing Your Proxy</a></li>
 <li><a class="reference internal" href="#understanding-the-handler-lifecycle">Understanding the Handler Lifecycle</a></li>
-<li><a class="reference internal" href="#advanced-configuration">Advanced Configuration</a></li>
 <li><a class="reference internal" href="#next-steps">Next Steps</a></li>
 </ul>
 </li>

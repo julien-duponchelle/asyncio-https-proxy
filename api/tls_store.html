@@ -137,31 +137,12 @@
 <h1>TLS Store<a class="headerlink" href="#tls-store" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="asyncio_https_proxy.TLSStore">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio_https_proxy.</span></span><span class="sig-name descname"><span class="pre">TLSStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ca_cert_pem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca_key_pem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio_https_proxy.TLSStore" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio_https_proxy.</span></span><span class="sig-name descname"><span class="pre">TLSStore</span></span><a class="headerlink" href="#asyncio_https_proxy.TLSStore" title="Link to this definition">¶</a></dt>
 <dd><p>A simple in-memory TLS store that generates a CA and signs certificates for domains on the fly.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ca_cert_pem</strong> – Optional CA certificate in PEM format. If not provided, a new CA will be generated.</p></li>
-<li><p><strong>ca_key_pem</strong> – Optional CA private key in PEM format. Required if ca_cert_pem is provided.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="asyncio_https_proxy.TLSStore.get_ca_key_pem">
-<span class="sig-name descname"><span class="pre">get_ca_key_pem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#asyncio_https_proxy.TLSStore.get_ca_key_pem" title="Link to this definition">¶</a></dt>
-<dd><p>Get the CA private key in PEM format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The CA private key in PEM format.</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio_https_proxy.TLSStore.get_ca_pem">
 <span class="sig-name descname"><span class="pre">get_ca_pem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#asyncio_https_proxy.TLSStore.get_ca_pem" title="Link to this definition">¶</a></dt>
-<dd><p>Get the CA certificate in PEM format.</p>
+<dd><p>Get the CA PEM certificate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The CA certificate in PEM format.</p>
@@ -200,7 +181,6 @@
                 <ul>
 <li><a class="reference internal" href="#">TLS Store</a><ul>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore"><code class="docutils literal notranslate"><span class="pre">TLSStore</span></code></a><ul>
-<li><a class="reference internal" href="#asyncio_https_proxy.TLSStore.get_ca_key_pem"><code class="docutils literal notranslate"><span class="pre">TLSStore.get_ca_key_pem()</span></code></a></li>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore.get_ca_pem"><code class="docutils literal notranslate"><span class="pre">TLSStore.get_ca_pem()</span></code></a></li>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore.get_ssl_context"><code class="docutils literal notranslate"><span class="pre">TLSStore.get_ssl_context()</span></code></a></li>
 </ul>

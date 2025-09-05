@@ -42,7 +42,7 @@ async def start_proxy_server(
         port: The port to bind the server to.
     """
 
-    def proxy_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    def create_connection_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """
         Create a handler for incoming proxy connections.
 
@@ -50,34 +50,34 @@ async def start_proxy_server(
         :raises ConnectionError: If the client disconnect
         :raises IncompleteReadError: If the headers are incomplete
         """
-        proxy = handler_builder()
+        handler = handler_builder()
 
-        async def handle_connection():
+        async def process_client_connection():
             with closing(writer):
                 initial_request = await _parse_request(reader)
 
-                proxy.client_reader = reader
-                proxy.client_writer = writer
+                handler.client_reader = reader
+                handler.client_writer = writer
 
                 if initial_request.method == "CONNECT":
-                    proxy.client_writer.write(
+                    handler.client_writer.write(
                         b"HTTP/1.1 200 Connection Established\r\n\r\n"
                     )
-                    await proxy.client_writer.drain()
-                    await proxy.client_writer.start_tls(
+                    await handler.client_writer.drain()
+                    await handler.client_writer.start_tls(
                         tls_store.get_ssl_context(initial_request.host),
                         server_hostname=initial_request.host,
                     )
                     # Re-parse the request after TLS is established
-                    request = await _parse_request(proxy.client_reader)
+                    request = await _parse_request(handler.client_reader)
                     request.port = initial_request.port
                     request.scheme = "https"
-                    proxy.request = request
+                    handler.request = request
                 else:
-                    proxy.request = initial_request
-                await proxy.client_connected()
-                await proxy.request_received()
+                    handler.request = initial_request
+                await handler.on_client_connected()
+                await handler.on_request_received()
 
-        asyncio.create_task(handle_connection())
+        asyncio.create_task(process_client_connection())
 
-    return await asyncio.start_server(proxy_handler, host=host, port=port)
+    return await asyncio.start_server(create_connection_handler, host=host, port=port)

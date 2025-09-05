@@ -13,7 +13,7 @@ class MockProxyHandler(HTTPSProxyHandler):
         self.connected_calls = []
         self.requests = []
 
-    async def client_connected(self):
+    async def on_client_connected(self):
         """Override to track connections and requests"""
         self.connected_calls.append(True)
         self.requests.append(self.request)

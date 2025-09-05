@@ -11,10 +11,10 @@ from asyncio_https_proxy import start_proxy_server, HTTPSProxyHandler, TLSStore
 
 
 class BasicProxyHandler(HTTPSProxyHandler):
-    async def client_connected(self):
+    async def on_client_connected(self):
         print(f"Client connected: {self.request}")
 
-    async def request_received(self):
+    async def on_request_received(self):
         for key, value in self.request.headers:
             print(f"  {key}: {value}")
         print("Url:", self.request.url())
@@ -29,17 +29,17 @@ class BasicProxyHandler(HTTPSProxyHandler):
         ) as response:
             print(f"Received response: {response.status_code} {response.reason_phrase}")
             # Send the response back to the client
-            self.reply(
+            self.write_response(
                 f"HTTP/1.1 {response.status_code} {response.reason_phrase}\r\n".encode()
             )
             # Forward all headers from the remote response to the client
             for key, value in response.headers.items():
-                self.reply(f"{key}: {value}\r\n".encode())
-            self.reply(b"\r\n")
+                self.write_response(f"{key}: {value}\r\n".encode())
+            self.write_response(b"\r\n")
 
             # Stream the response body in chunks
             async for chunk in response.aiter_bytes():
-                self.reply(chunk)
+                self.write_response(chunk)
 
 
 async def main():

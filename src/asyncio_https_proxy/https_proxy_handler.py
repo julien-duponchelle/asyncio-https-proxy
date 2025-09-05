@@ -9,25 +9,29 @@ class HTTPSProxyHandler:
     An instance of a connection from a client to the HTTPS proxy server
 
     Each new client connection will create a new instance of this class.
+    
+    Attributes:
+        client_reader: StreamReader for reading data from the client
+        client_writer: StreamWriter for writing data to the client
+        request: The parsed HTTP request from the client (set by the server)
     """
 
     client_reader: asyncio.StreamReader
     client_writer: asyncio.StreamWriter
 
-    async def client_connected(
+    async def on_client_connected(
         self,
     ):
         """
-        A client has connected to the proxy and sent a valid request.
+        Called when a client has connected to the proxy and sent a valid request.
 
         Override this method to implement custom behavior.
         """
         pass
 
-    async def request_received(self):
+    async def on_request_received(self):
         """
-        A complete request headers has been received from the client.
-
+        Called when a complete request has been received from the client.
 
         Override this method to implement custom behavior.
         """
@@ -55,17 +59,17 @@ class HTTPSProxyHandler:
             if length <= 0:
                 break
 
-    def reply(self, content: bytes):
+    def write_response(self, content: bytes):
         """
-        Send a reply to the client. Until `flush()` is called, the data may be buffered.
+        Write response data to the client. Until `flush_response()` is called, the data may be buffered.
 
         Args:
             content: The content to send to the client.
         """
         self.client_writer.write(content)
 
-    async def flush(self):
+    async def flush_response(self):
         """
-        Flush the client writer buffer.
+        Flush the response data to the client.
         """
         await self.client_writer.drain()

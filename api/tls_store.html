@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TLS Store &#8212; asyncio-https-proxy  documentation</title>
+    <title>TLSStore &#8212; asyncio-https-proxy  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/basic_mod.css?v=9b2032db" />
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
@@ -14,7 +14,9 @@
     <script src="../_static/js/theme.js"></script>
     <script src="../_static/js/petite-vue.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Development" href="../development.html" />
+    <link rel="prev" title="HTTPSProxyHandler" href="https_proxy_handler.html" /> 
   </head><body data-dark_mode_code_blocks="true">
 
 <div id="top_nav">
@@ -116,10 +118,16 @@
 
     
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
-        <div class="sphinxsidebarwrapper"><ul>
+        <div class="sphinxsidebarwrapper"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_ca.html">Use a custom Certificate Authority (CA)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="http_request.html">HTTPRequest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="http_header.html">HTTPHeader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https_proxy_handler.html">HTTPSProxyHandler</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TLSStore</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
 </ul>
@@ -133,8 +141,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="tls-store">
-<h1>TLS Store<a class="headerlink" href="#tls-store" title="Link to this heading">¶</a></h1>
+  <section id="tlsstore">
+<h1>TLSStore<a class="headerlink" href="#tlsstore" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="asyncio_https_proxy.TLSStore">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio_https_proxy.</span></span><span class="sig-name descname"><span class="pre">TLSStore</span></span><a class="headerlink" href="#asyncio_https_proxy.TLSStore" title="Link to this definition">¶</a></dt>
@@ -179,7 +187,7 @@
             <p><a class="toggle_right_sidebar" href="#"><span class="icon">&gt;</span><span>Page contents:</span></a></p>
             <div class="page_toc">
                 <ul>
-<li><a class="reference internal" href="#">TLS Store</a><ul>
+<li><a class="reference internal" href="#">TLSStore</a><ul>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore"><code class="docutils literal notranslate"><span class="pre">TLSStore</span></code></a><ul>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore.get_ca_pem"><code class="docutils literal notranslate"><span class="pre">TLSStore.get_ca_pem()</span></code></a></li>
 <li><a class="reference internal" href="#asyncio_https_proxy.TLSStore.get_ssl_context"><code class="docutils literal notranslate"><span class="pre">TLSStore.get_ssl_context()</span></code></a></li>
@@ -199,9 +207,14 @@
         <div class="button_nav">
             <div class="left">
                 
+                <a href="https_proxy_handler.html">
+                    <span class="icon">&lt;</span><span>HTTPSProxyHandler</span></a>
+                
             </div>
 
             <div class="right">
+                
+                    <a href="../development.html"><span>Development</span><span class="icon">&gt;</span></a>
                 
             </div>
         </div>

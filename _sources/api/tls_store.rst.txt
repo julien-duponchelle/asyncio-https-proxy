@@ -1,4 +1,4 @@
-TLS Store
+TLSStore
 ==========
 
 .. autoclass:: asyncio_https_proxy.TLSStore

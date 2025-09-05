@@ -137,6 +137,21 @@
             
   <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio_https_proxy.start_proxy_server">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio_https_proxy.</span></span><span class="sig-name descname"><span class="pre">start_proxy_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handler_builder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="api/https_proxy_handler.html#asyncio_https_proxy.HTTPSProxyHandler" title="asyncio_https_proxy.https_proxy_handler.HTTPSProxyHandler"><span class="pre">HTTPSProxyHandler</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="api/tls_store.html#asyncio_https_proxy.TLSStore" title="asyncio_https_proxy.tls_store.TLSStore"><span class="pre">TLSStore</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Server</span></span></span><a class="headerlink" href="#asyncio_https_proxy.start_proxy_server" title="Link to this definition">¶</a></dt>
+<dd><p>Start the proxy server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>handler_builder</strong> – A callable that returns a new instance of HTTPSProxyHandler.</p></li>
+<li><p><strong>host</strong> – The host to bind the server to.</p></li>
+<li><p><strong>port</strong> – The port to bind the server to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <section id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -163,6 +178,7 @@
             <div class="page_toc">
                 <ul>
 <li><a class="reference internal" href="#">API Reference</a><ul>
+<li><a class="reference internal" href="#asyncio_https_proxy.start_proxy_server"><code class="docutils literal notranslate"><span class="pre">start_proxy_server()</span></code></a></li>
 <li><a class="reference internal" href="#classes">Classes</a></li>
 </ul>
 </li>

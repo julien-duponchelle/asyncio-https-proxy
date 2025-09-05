@@ -135,6 +135,49 @@
             
   <section id="httpheader">
 <h1>HTTPHeader<a class="headerlink" href="#httpheader" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio_https_proxy.HTTPHeader">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio_https_proxy.</span></span><span class="sig-name descname"><span class="pre">HTTPHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio_https_proxy.HTTPHeader" title="Link to this definition">¶</a></dt>
+<dd><p>Represents HTTP headers, preserving order and allowing duplicates.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio_https_proxy.HTTPHeader.first">
+<span class="sig-name descname"><span class="pre">first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#asyncio_https_proxy.HTTPHeader.first" title="Link to this definition">¶</a></dt>
+<dd><p>Get the first occurrence of a header by key (case-insensitive).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> – Header key to search for</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The header value or None if not found</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio_https_proxy.HTTPHeader.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#asyncio_https_proxy.HTTPHeader.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Convert headers to a dictionary. If multiple headers have the same key,
+only the last one is kept.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Headers as a dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio_https_proxy.HTTPHeader.to_raw">
+<span class="sig-name descname"><span class="pre">to_raw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#asyncio_https_proxy.HTTPHeader.to_raw" title="Link to this definition">¶</a></dt>
+<dd><p>Convert headers back to raw bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Raw headers as bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -142,6 +185,28 @@
           </div>
         </div>
       </div>
+    
+        <div id="show_right_sidebar">
+            <p><a class="toggle_right_sidebar" href="#"><span class="icon">&lt;</span><span>Page contents</span></a></p>
+        </div>
+
+        <div id="right_sidebar">
+            <p><a class="toggle_right_sidebar" href="#"><span class="icon">&gt;</span><span>Page contents:</span></a></p>
+            <div class="page_toc">
+                <ul>
+<li><a class="reference internal" href="#">HTTPHeader</a><ul>
+<li><a class="reference internal" href="#asyncio_https_proxy.HTTPHeader"><code class="docutils literal notranslate"><span class="pre">HTTPHeader</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio_https_proxy.HTTPHeader.first"><code class="docutils literal notranslate"><span class="pre">HTTPHeader.first()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio_https_proxy.HTTPHeader.to_dict"><code class="docutils literal notranslate"><span class="pre">HTTPHeader.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio_https_proxy.HTTPHeader.to_raw"><code class="docutils literal notranslate"><span class="pre">HTTPHeader.to_raw()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+        </div>
     
 
       <div class="clearer"></div>

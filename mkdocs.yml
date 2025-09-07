@@ -1,0 +1,87 @@
+site_name: asyncio-https-proxy
+site_description: Embeddable asyncio HTTPS forward proxy with request/response interception for Python applications
+site_url: https://github.com/julien-duponchelle/asyncio-https-proxy
+repo_url: https://github.com/julien-duponchelle/asyncio-https-proxy
+repo_name: julien-duponchelle/asyncio-https-proxy
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+    - content.code.select
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Custom CA: custom-ca.md
+  - API Reference:
+    - Overview: reference/index.md
+    - HTTPSProxyHandler: reference/https_proxy_handler.md
+    - HTTPRequest: reference/http_request.md
+    - HTTPHeader: reference/http_header.md
+    - TLSStore: reference/tls_store.md
+  - Development: development.md
+  - FAQ: faq.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            show_submodules: false
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_object_full_path: false
+            show_category_heading: false
+            group_by_category: true
+            heading_level: 2
+            members_order: source
+            line_length: 80
+          paths: [src]
+  - autorefs
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/julien-duponchelle/asyncio-https-proxy

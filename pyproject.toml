@@ -11,13 +11,13 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
-    "myst-parser>=4.0.1",
-    "piccolo-theme>=0.24.0",
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.26.0",
+    "mkdocs-autorefs>=1.2.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "ruff>=0.12.11",
-    "sphinx>=8.2.3",
-    "sphinx-autobuild>=2025.8.25",
 ]
 
 [tool.pytest.ini_options]

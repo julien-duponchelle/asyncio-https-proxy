@@ -1,12 +1,11 @@
 import datetime
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import NameOID
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization
 import ssl
 import tempfile
 
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 CERTIFICATE_VALIDITY_DAYS = 365 * 100
 
@@ -122,8 +121,8 @@ class TLSStore:
             .add_extension(
                 x509.ExtendedKeyUsage(
                     [
-                        x509.ExtendedKeyUsageOID.CLIENT_AUTH,
-                        x509.ExtendedKeyUsageOID.SERVER_AUTH,
+                        ExtendedKeyUsageOID.CLIENT_AUTH,
+                        ExtendedKeyUsageOID.SERVER_AUTH,
                     ]
                 ),
                 critical=False,

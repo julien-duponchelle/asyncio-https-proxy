@@ -1,11 +1,12 @@
-import pytest
-import ssl
 import datetime
+import ssl
+
+import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import ExtendedKeyUsageOID
 
-
-from asyncio_https_proxy.tls_store import TLSStore, CERTIFICATE_VALIDITY_DAYS
+from asyncio_https_proxy.tls_store import CERTIFICATE_VALIDITY_DAYS, TLSStore
 
 
 @pytest.fixture
@@ -110,8 +111,8 @@ def test_generate_cert_creates_valid_certificate(tls_store):
 
     # Check extended key usage
     ext_key_usage = cert.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value
-    assert x509.ExtendedKeyUsageOID.SERVER_AUTH in ext_key_usage
-    assert x509.ExtendedKeyUsageOID.CLIENT_AUTH in ext_key_usage
+    assert ExtendedKeyUsageOID.SERVER_AUTH in ext_key_usage
+    assert ExtendedKeyUsageOID.CLIENT_AUTH in ext_key_usage
 
     # Check issuer matches CA subject
     assert cert.issuer == tls_store._ca[1].subject

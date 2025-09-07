@@ -18,6 +18,8 @@ It's a fundation layer for building your own proxy-based tools.
 - **Certificate generation**: Dynamically generate and sign certificates for intercepted HTTPS traffic
 - **Request/Response interception**: Modify, log, or block HTTP(S) traffic in real-time
 - **Lightweight**: Pure Python implementation with only cryptography as a direct external dependency
+- **Optional implementation of forward proxy**: The implementation to forward HTTP request can be replace in order to use different HTTP client implementation
+
 
 ## Use Cases
 

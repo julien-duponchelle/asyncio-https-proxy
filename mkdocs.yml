@@ -30,6 +30,7 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Advanced Usage: advanced-usage.md
   - How to:
     - Custom CA: custom-ca.md
   - API Reference: reference/index.md
@@ -62,6 +63,7 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
+  - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true

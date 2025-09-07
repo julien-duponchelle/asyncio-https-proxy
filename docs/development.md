@@ -35,3 +35,10 @@ uv run mkdocs serve
 ```
 
 This will start a development server at `http://127.0.0.1:8000` with automatic reload when you make changes to the documentation files.
+
+
+Dependencies need to be exported to a `requirements.txt` file in order to be accessible to Read The Docs.
+
+```console
+uv export --no-hashes --format requirements-txt  --group documentation > docs/requirements.txt
+```

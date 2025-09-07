@@ -31,12 +31,7 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Custom CA: custom-ca.md
-  - API Reference:
-    - Overview: reference/index.md
-    - HTTPSProxyHandler: reference/https_proxy_handler.md
-    - HTTPRequest: reference/http_request.md
-    - HTTPHeader: reference/http_header.md
-    - TLSStore: reference/tls_store.md
+  - API Reference: reference/index.md
   - Development: development.md
   - FAQ: faq.md
 

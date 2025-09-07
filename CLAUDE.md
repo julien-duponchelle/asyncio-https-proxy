@@ -25,6 +25,11 @@ uv run ruff check
 uv run ruff format
 ```
 
+**Type checking**
+```bash
+uv run pyright
+```
+
 **Documentation:**
 ```bash
 # Serve docs locally with auto-reload
@@ -32,9 +37,6 @@ uv run mkdocs serve
 
 # Build documentation
 uv run mkdocs build
-
-# Export documentation dependencies for Read The Docs
-uv export --no-hashes --format requirements-txt --group documentation > docs/requirements.txt
 ```
 
 ## Architecture Overview

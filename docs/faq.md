@@ -17,3 +17,12 @@ This library is designed for embedding into applications and can be used in prod
 ## What is the license?
 
 This project is licensed under the Apache 2.0 License. See the license for details: https://www.apache.org/licenses/LICENSE-2.0
+
+
+## How AI was used to develop this project?
+
+Claude code have been used for:
+* Challenge the API naming
+* Help improve documentation
+* Help improve test quality
+* Generate example usage

@@ -1,6 +1,6 @@
 # asyncio-https-proxy
 
-<!-- START doc -->
+# --8<-- [start:intro]
 
 An embeddable, asyncio-based HTTPS forward proxy server with built-in request and response interception capabilities. Designed to be integrated directly into your Python applications rather than run as a standalone service.
 
@@ -31,4 +31,9 @@ It's a fundation layer for building your own proxy-based tools.
 - Fault injection and network simulation
 - Research and educational purposes
 
-<!-- END doc -->
+# --8<-- [end:intro]
+
+
+## Documentation 
+
+Document is available herehttps://asyncio-https-proxy.readthedocs.io/en/latest/

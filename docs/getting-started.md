@@ -22,8 +22,7 @@ asyncio-https-proxy is an embeddable, asyncio-based HTTPS forward proxy server t
 **Python Version**
 : Requires Python 3.13 or later.
 
-**Dependencies**
-: - `cryptography` - For TLS/SSL certificate generation and handling (installed automatically)
+**Dependencies**: `cryptography` For TLS/SSL certificate generation and handling (installed automatically)
 
 ## Installation
 
@@ -68,38 +67,43 @@ class BasicProxyHandler(HTTPSProxyHandler):
     
     async def _forward_request(self):
         """Forward the request to the target server and relay the response."""
-        try:
-            # Create HTTP client for forwarding requests
-            async with httpx.AsyncClient() as client:
-                # Forward the request with all original headers and body
-                async with client.stream(
-                    method=self.request.method,
-                    url=self.request.url(),
-                    headers=self.request.headers.to_dict(),
-                    content=self.read_request_body(),  # Stream request body
-                ) as response:
-                    print(f"Response: {response.status_code} {response.reason_phrase}")
-                    
-                    # Send response status line
-                    self.write_response(
-                        f"HTTP/1.1 {response.status_code} {response.reason_phrase}\\r\\n".encode()
-                    )
-                    
-                    # Forward response headers
-                    for key, value in response.headers.items():
-                        self.write_response(f"{key}: {value}\\r\\n".encode())
-                    self.write_response(b"\\r\\n")
-                    
-                    # Stream response body
-                    async for chunk in response.aiter_bytes():
-                        self.write_response(chunk)
-                        
-        except Exception as e:
-            print(f"Error forwarding request: {e}")
-            # Send error response
-            self.write_response(b"HTTP/1.1 500 Internal Server Error\\r\\n\\r\\n")
-            self.write_response(f"Proxy Error: {str(e)}".encode())
+        # Create HTTP client for forwarding requests
+        async with httpx.AsyncClient() as client:
+            # Forward the request with all original headers and body
+            async with client.stream(
+                method=self.request.method,
+                url=self.request.url(),
+                headers=self.request.headers.to_dict(),
+                content=self.read_request_body(),  # Stream request body
+            ) as response:
+                print(f"Response: {response.status_code} {response.reason_phrase}")
+                
+                # Send response status line
+                self.write_response(
+                    f"HTTP/1.1 {response.status_code} {response.reason_phrase}\\r\\n".encode()
+                )
+                
+                # Forward response headers
+                for key, value in response.headers.items():
+                    self.write_response(f"{key}: {value}\\r\\n".encode())
+                self.write_response(b"\\r\\n")
+                
+                # Stream response body
+                async for chunk in response.aiter_bytes():
+                    self.write_response(chunk)                        
 ```
+
+The handler is where you implement the custom logic by overriding the `on_` methods.
+
+By default no forwarding capacity is provided you need to implement your own.
+This give you full control on the behaviors.
+
+
+```python
+self.write_response(chunk)
+```
+
+Send back to the browser/HTTP client the response.
 
 **Step 2: Start the Proxy Server**
 
@@ -186,7 +190,7 @@ Configure your browser to use `127.0.0.1:8888` as an HTTP proxy. You'll need to 
 The `HTTPSProxyHandler` has a well-defined lifecycle:
 
 1. **Client Connection**: When a client connects, `on_client_connected()` is called
-2. **Request Parsing**: The server parses the HTTP request and assigns it to `self.request`
+2. **Request Parsing**: The server parses the HTTP request to [HTTPRequest](reference/http_request.md) and assigns it to `self.request`
 3. **Request Processing**: `on_request_received()` is called with the complete request
 4. **Response Generation**: Your handler processes the request and writes the response
 5. **Connection Cleanup**: The connection is automatically cleaned up

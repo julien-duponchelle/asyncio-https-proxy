@@ -9,6 +9,8 @@ This section contains the complete API documentation for asyncio-https-proxy.
 ## Classes
 
 - [HTTPSProxyHandler](https_proxy_handler.md) - Base handler class for processing requests
+- [HTTPSForwardProxyHandler](https_forward_proxy_handler.md) - Built-in forward proxy handler with automatic request forwarding
 - [HTTPRequest](http_request.md) - HTTP request representation
+- [HTTPResponse](http_response.md) - HTTP response representation
 - [HTTPHeader](http_header.md) - HTTP header collection
 - [TLSStore](tls_store.md) - TLS certificate management

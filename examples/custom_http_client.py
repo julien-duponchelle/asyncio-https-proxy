@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Basic usage example for asyncio-https-proxy.
+Basic usage example for asyncio-https-proxy using HTTPX as
+the HTTP client to forward requests
 
 This example shows how to set up a simple HTTPS proxy server.
 """
 
 import asyncio
+
 import httpx
-from asyncio_https_proxy import start_proxy_server, HTTPSProxyHandler, TLSStore
+
+from asyncio_https_proxy import HTTPSProxyHandler, TLSStore, start_proxy_server
 
 
 class BasicProxyHandler(HTTPSProxyHandler):

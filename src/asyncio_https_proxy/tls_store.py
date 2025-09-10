@@ -14,37 +14,60 @@ CERTIFICATE_VALIDITY_DAYS = 365 * 100
 
 class TLSStore:
     """
-    A simple in-memory TLS store that generates a CA and signs certificates for domains on the fly.
+    A simple in-memory TLS store that signs certificates for domains on the fly using a provided CA.
+    
+    Use TLSStore.generate_ca() to create a new CA, or TLSStore.load_ca_from_disk() to load an existing one.
     
     Args:
-        ca_key: Optional CA private key. If provided, ca_cert must also be provided.
-        ca_cert: Optional CA certificate. If provided, ca_key must also be provided.        
+        ca_key: The CA private key (must be EllipticCurve)
+        ca_cert: The CA certificate        
     """
 
     def __init__(
         self,
-        ca_key: Optional[ec.EllipticCurvePrivateKey] = None,
-        ca_cert: Optional[x509.Certificate] = None,
+        ca_key: ec.EllipticCurvePrivateKey,
+        ca_cert: x509.Certificate,
     ):
-        if (ca_key is None) != (ca_cert is None):
-            raise ValueError("Both ca_key and ca_cert must be provided together, or neither")
+        """
+        Initialize TLSStore with an existing CA key and certificate.
         
-        if ca_key is not None and ca_cert is not None:
-            self._ca = (ca_key, ca_cert)
-        else:
-            self._ca = self._generate_ca()
-        
+        Args:
+            ca_key: The CA private key (must be EllipticCurve)
+            ca_cert: The CA certificate
+        """
+        self._ca = (ca_key, ca_cert)
         self._store = {}
 
-    def _generate_ca(self):
+    @classmethod
+    def generate_ca(
+        cls,
+        country: str,
+        state: str,
+        locality: str,
+        organization: str,
+        common_name: str,
+    ) -> "TLSStore":
+        """
+        Generate a new CA and create a TLSStore instance with it.
+        
+        Args:
+            country: Two-letter country code (e.g., "FR", "US")
+            state: State or province name (e.g., "Ile-de-France", "California")
+            locality: City or locality name (e.g., "Paris", "San Francisco")
+            organization: Organization name (e.g., "My Company")
+            common_name: Common name for the CA (e.g., "My Company CA")
+            
+        Returns:
+            TLSStore instance with the generated CA
+        """
         root_key = ec.generate_private_key(ec.SECP256R1())
         subject = issuer = x509.Name(
             [
-                x509.NameAttribute(NameOID.COUNTRY_NAME, "FR"),
-                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Ile-de-France"),
-                x509.NameAttribute(NameOID.LOCALITY_NAME, "Paris"),
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Asyncio HTTPS Proxy"),
-                x509.NameAttribute(NameOID.COMMON_NAME, "Asyncio HTTPS Proxy CA"),
+                x509.NameAttribute(NameOID.COUNTRY_NAME, country),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, state),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, locality),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization),
+                x509.NameAttribute(NameOID.COMMON_NAME, common_name),
             ]
         )
         root_cert = (
@@ -83,7 +106,8 @@ class TLSStore:
             )
             .sign(root_key, hashes.SHA256())
         )
-        return (root_key, root_cert)
+        return cls(ca_key=root_key, ca_cert=root_cert)
+
 
     def _generate_cert(
         self, domain

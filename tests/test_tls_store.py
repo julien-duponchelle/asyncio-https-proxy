@@ -12,7 +12,13 @@ from asyncio_https_proxy.tls_store import CERTIFICATE_VALIDITY_DAYS, TLSStore
 @pytest.fixture
 def tls_store():
     """Create a fresh TLSStore instance for testing"""
-    return TLSStore()
+    return TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France", 
+        locality="Paris",
+        organization="Asyncio HTTPS Proxy",
+        common_name="Asyncio HTTPS Proxy CA"
+    )
 
 
 def test_tls_store_initialization(tls_store):

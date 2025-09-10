@@ -23,7 +23,13 @@ class MockProxyHandler(HTTPSProxyHandler):
 def tls_store():
     from asyncio_https_proxy.tls_store import TLSStore
 
-    return TLSStore()
+    return TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France", 
+        locality="Paris",
+        organization="Test Org",
+        common_name="Test CA"
+    )
 
 
 @pytest.fixture

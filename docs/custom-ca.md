@@ -17,8 +17,6 @@ To intercept HTTPS traffic, you need to create your own CA certificate and confi
 to trust this CA. This allows the proxy to generate and sign certificates for the target domains on-the-fly,
 allowing it to decrypt and inspect the HTTPS traffic.
 
-By default the library create a temporary Root CA on the fly but if you want to trust the CA in your
-browser you will need the persist the CA.
 
 ## Using Custom CA Keys with TLSStore
 
@@ -44,8 +42,14 @@ To persist a CA to disk for reuse across multiple proxy runs:
 ```python
 from asyncio_https_proxy import TLSStore
 
-# Create a new TLS store (will generate a new CA)
-tls_store = TLSStore()
+# Create a new TLS store with explicit CA generation
+tls_store = TLSStore.generate_ca(
+    country="FR",
+    state="Ile-de-France",
+    locality="Paris",
+    organization="My Company",
+    common_name="My Company CA"
+)
 
 # Save the CA to disk for future use
 tls_store.save_ca_to_disk("ca_private_key.pem", "ca_certificate.pem")
@@ -63,8 +67,14 @@ if os.path.exists("ca_private_key.pem") and os.path.exists("ca_certificate.pem")
     tls_store = TLSStore.load_ca_from_disk("ca_private_key.pem", "ca_certificate.pem")
     print("Loaded existing CA from disk")
 else:
-    # Create new CA and save it to disk
-    tls_store = TLSStore()
+    # Create new CA with explicit parameters and save it to disk
+    tls_store = TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France",
+        locality="Paris",
+        organization="My Company",
+        common_name="My Company CA"
+    )
     tls_store.save_ca_to_disk("ca_private_key.pem", "ca_certificate.pem")
     print("Created new CA and saved to disk")
 ```

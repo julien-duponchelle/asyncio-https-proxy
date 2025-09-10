@@ -57,8 +57,14 @@ async def main():
     print(f"  curl --insecure --proxy http://{host}:{port} http://httpbin.org/get")
     print("\nPress Ctrl+C to stop the proxy")
 
-    # Initialize the TLS store with a self-signed CA certificate
-    tls_store = TLSStore()
+    # Initialize the TLS store with a generated CA certificate
+    tls_store = TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France",
+        locality="Paris",
+        organization="Example Proxy",
+        common_name="Example Proxy CA"
+    )
 
     server = await start_proxy_server(
         handler_builder=lambda: BasicProxyHandler(),

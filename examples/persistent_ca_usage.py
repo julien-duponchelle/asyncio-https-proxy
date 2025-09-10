@@ -28,9 +28,15 @@ def get_or_create_ca():
     else:
         print("No existing CA files found.")
     
-    # Create new TLSStore with default CA generation
+    # Create new TLSStore with explicit CA generation
     print("Creating new TLS store...")
-    tls_store = TLSStore()
+    tls_store = TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France",
+        locality="Paris",
+        organization="Persistent Proxy Example",
+        common_name="Persistent Proxy CA"
+    )
     
     # Save the generated CA to disk for future use
     print("Saving CA to disk for future reuse...")

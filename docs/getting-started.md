@@ -110,8 +110,14 @@ async def main():
     print("\nThe proxy will intercept both HTTP and HTTPS traffic.")
     print("For HTTPS, it generates certificates on-the-fly using a built-in CA.")
     
-    # Initialize TLS store (creates CA certificate automatically)
-    tls_store = TLSStore()
+    # Initialize TLS store with explicit CA generation
+    tls_store = TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France",
+        locality="Paris",
+        organization="Getting Started Proxy",
+        common_name="Getting Started Proxy CA"
+    )
     print(f"\nGenerated CA certificate. Clients may show security warnings.")
     print("Use --insecure with curl")
     

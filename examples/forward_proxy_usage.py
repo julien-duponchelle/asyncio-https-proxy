@@ -71,7 +71,13 @@ async def main():
     print("\nPress Ctrl+C to stop the proxy")
 
     # Initialize the TLS store for HTTPS interception
-    tls_store = TLSStore()
+    tls_store = TLSStore.generate_ca(
+        country="FR",
+        state="Ile-de-France",
+        locality="Paris",
+        organization="Forward Proxy Example",
+        common_name="Forward Proxy CA"
+    )
 
     server = await start_proxy_server(
         handler_builder=lambda: LoggingForwardProxyHandler(),

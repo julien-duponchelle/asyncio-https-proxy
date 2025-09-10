@@ -4,6 +4,7 @@ uv.lock
 .pytest_cache
 .ruff_cache
 docs/_*
+*.pem
 
 .serena
 CLAUDE.md

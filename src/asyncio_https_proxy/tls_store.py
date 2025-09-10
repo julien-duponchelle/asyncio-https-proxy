@@ -1,6 +1,8 @@
 import datetime
 import ssl
 import tempfile
+from pathlib import Path
+from typing import Optional, Union
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -13,10 +15,25 @@ CERTIFICATE_VALIDITY_DAYS = 365 * 100
 class TLSStore:
     """
     A simple in-memory TLS store that generates a CA and signs certificates for domains on the fly.
+    
+    Args:
+        ca_key: Optional CA private key. If provided, ca_cert must also be provided.
+        ca_cert: Optional CA certificate. If provided, ca_key must also be provided.        
     """
 
-    def __init__(self):
-        self._ca = self._generate_ca()
+    def __init__(
+        self,
+        ca_key: Optional[ec.EllipticCurvePrivateKey] = None,
+        ca_cert: Optional[x509.Certificate] = None,
+    ):
+        if (ca_key is None) != (ca_cert is None):
+            raise ValueError("Both ca_key and ca_cert must be provided together, or neither")
+        
+        if ca_key is not None and ca_cert is not None:
+            self._ca = (ca_key, ca_cert)
+        else:
+            self._ca = self._generate_ca()
+        
         self._store = {}
 
     def _generate_ca(self):
@@ -181,3 +198,60 @@ class TLSStore:
             ssl_context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
         return ssl_context
+
+    def save_ca_to_disk(self, key_file: Union[str, Path], cert_file: Union[str, Path]) -> None:
+        """
+        Save the CA private key and certificate to disk files.
+        
+        Args:
+            key_file: Path where to save the CA private key (PEM format)
+            cert_file: Path where to save the CA certificate (PEM format)
+        """
+        ca_key, ca_cert = self._ca
+        
+        # Save private key to disk
+        with open(key_file, "wb") as f:
+            f.write(ca_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            ))
+        
+        # Save certificate to disk
+        with open(cert_file, "wb") as f:
+            f.write(ca_cert.public_bytes(serialization.Encoding.PEM))
+
+    @classmethod
+    def load_ca_from_disk(
+        cls, 
+        key_file: Union[str, Path], 
+        cert_file: Union[str, Path]
+    ) -> "TLSStore":
+        """
+        Load CA private key and certificate from disk and create a TLSStore instance.
+        
+        Args:
+            key_file: Path to the CA private key file (PEM format)
+            cert_file: Path to the CA certificate file (PEM format)
+            
+        Returns:
+            TLSStore instance using the loaded CA
+            
+        Raises:
+            ValueError: If the key file doesn't contain an EllipticCurve private key
+            FileNotFoundError: If either file doesn't exist
+            ValueError: If the files cannot be parsed
+        """
+        # Load private key
+        with open(key_file, "rb") as f:
+            ca_key = serialization.load_pem_private_key(f.read(), password=None)
+        
+        # Verify it's an EC key
+        if not isinstance(ca_key, ec.EllipticCurvePrivateKey):
+            raise ValueError(f"CA key must be an EllipticCurve private key, got {type(ca_key)}")
+        
+        # Load certificate
+        with open(cert_file, "rb") as f:
+            ca_cert = x509.load_pem_x509_certificate(f.read())
+        
+        return cls(ca_key=ca_key, ca_cert=ca_cert)

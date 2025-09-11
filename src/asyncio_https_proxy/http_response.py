@@ -22,7 +22,7 @@ class HTTPResponse:
 
         Args:
             status_line: The status line as bytes, e.g. b"HTTP/1.1 200 OK"
-        
+
         Raises:
             ValueError: If the status line format is invalid
         """

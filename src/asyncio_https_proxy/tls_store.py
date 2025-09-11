@@ -15,12 +15,12 @@ CERTIFICATE_VALIDITY_DAYS = 365 * 100
 class TLSStore:
     """
     A simple in-memory TLS store that signs certificates for domains on the fly using a provided CA.
-    
+
     Use TLSStore.generate_ca() to create a new CA, or TLSStore.load_ca_from_disk() to load an existing one.
-    
+
     Args:
         ca_key: The CA private key (must be EllipticCurve)
-        ca_cert: The CA certificate        
+        ca_cert: The CA certificate
     """
 
     def __init__(
@@ -30,7 +30,7 @@ class TLSStore:
     ):
         """
         Initialize TLSStore with an existing CA key and certificate.
-        
+
         Args:
             ca_key: The CA private key (must be EllipticCurve)
             ca_cert: The CA certificate
@@ -49,14 +49,14 @@ class TLSStore:
     ) -> "TLSStore":
         """
         Generate a new CA and create a TLSStore instance with it.
-        
+
         Args:
             country: Two-letter country code (e.g., "FR", "US")
             state: State or province name (e.g., "Ile-de-France", "California")
             locality: City or locality name (e.g., "Paris", "San Francisco")
             organization: Organization name (e.g., "My Company")
             common_name: Common name for the CA (e.g., "My Company CA")
-            
+
         Returns:
             TLSStore instance with the generated CA
         """
@@ -108,21 +108,31 @@ class TLSStore:
         )
         return cls(ca_key=root_key, ca_cert=root_cert)
 
-
     def _generate_cert(
         self, domain
     ) -> tuple[ec.EllipticCurvePrivateKey, x509.Certificate]:
         ee_key = ec.generate_private_key(ec.SECP256R1())
-        
+
         ca_subject = self._ca[1].subject
         ca_attrs = {attr.oid: attr.value for attr in ca_subject}
-        
+
         subject = x509.Name(
             [
-                x509.NameAttribute(NameOID.COUNTRY_NAME, ca_attrs.get(NameOID.COUNTRY_NAME, "US")),
-                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, ca_attrs.get(NameOID.STATE_OR_PROVINCE_NAME, "Unknown")),
-                x509.NameAttribute(NameOID.LOCALITY_NAME, ca_attrs.get(NameOID.LOCALITY_NAME, "Unknown")),
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, ca_attrs.get(NameOID.ORGANIZATION_NAME, "Unknown")),
+                x509.NameAttribute(
+                    NameOID.COUNTRY_NAME, ca_attrs.get(NameOID.COUNTRY_NAME, "US")
+                ),
+                x509.NameAttribute(
+                    NameOID.STATE_OR_PROVINCE_NAME,
+                    ca_attrs.get(NameOID.STATE_OR_PROVINCE_NAME, "Unknown"),
+                ),
+                x509.NameAttribute(
+                    NameOID.LOCALITY_NAME,
+                    ca_attrs.get(NameOID.LOCALITY_NAME, "Unknown"),
+                ),
+                x509.NameAttribute(
+                    NameOID.ORGANIZATION_NAME,
+                    ca_attrs.get(NameOID.ORGANIZATION_NAME, "Unknown"),
+                ),
             ]
         )
         ee_cert = (
@@ -227,44 +237,46 @@ class TLSStore:
 
         return ssl_context
 
-    def save_ca_to_disk(self, key_file: Union[str, Path], cert_file: Union[str, Path]) -> None:
+    def save_ca_to_disk(
+        self, key_file: Union[str, Path], cert_file: Union[str, Path]
+    ) -> None:
         """
         Save the CA private key and certificate to disk files.
-        
+
         Args:
             key_file: Path where to save the CA private key (PEM format)
             cert_file: Path where to save the CA certificate (PEM format)
         """
         ca_key, ca_cert = self._ca
-        
+
         # Save private key to disk
         with open(key_file, "wb") as f:
-            f.write(ca_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
-            ))
-        
+            f.write(
+                ca_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+
         # Save certificate to disk
         with open(cert_file, "wb") as f:
             f.write(ca_cert.public_bytes(serialization.Encoding.PEM))
 
     @classmethod
     def load_ca_from_disk(
-        cls, 
-        key_file: Union[str, Path], 
-        cert_file: Union[str, Path]
+        cls, key_file: Union[str, Path], cert_file: Union[str, Path]
     ) -> "TLSStore":
         """
         Load CA private key and certificate from disk and create a TLSStore instance.
-        
+
         Args:
             key_file: Path to the CA private key file (PEM format)
             cert_file: Path to the CA certificate file (PEM format)
-            
+
         Returns:
             TLSStore instance using the loaded CA
-            
+
         Raises:
             ValueError: If the key file doesn't contain an EllipticCurve private key
             FileNotFoundError: If either file doesn't exist
@@ -273,13 +285,15 @@ class TLSStore:
         # Load private key
         with open(key_file, "rb") as f:
             ca_key = serialization.load_pem_private_key(f.read(), password=None)
-        
+
         # Verify it's an EC key
         if not isinstance(ca_key, ec.EllipticCurvePrivateKey):
-            raise ValueError(f"CA key must be an EllipticCurve private key, got {type(ca_key)}")
-        
+            raise ValueError(
+                f"CA key must be an EllipticCurve private key, got {type(ca_key)}"
+            )
+
         # Load certificate
         with open(cert_file, "rb") as f:
             ca_cert = x509.load_pem_x509_certificate(f.read())
-        
+
         return cls(ca_key=ca_key, ca_cert=ca_cert)

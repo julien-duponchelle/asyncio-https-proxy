@@ -13,11 +13,11 @@ from asyncio_https_proxy import HTTPSForwardProxyHandler, TLSStore, start_proxy_
 
 class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
     """Example forward proxy handler with request/response logging and content analysis."""
-    
+
     def __init__(self):
         super().__init__()
         self.response_size = 0
-        
+
     async def on_client_connected(self):
         print(f"Client connected: {self.request}")
         # Call parent to handle the request forwarding automatically
@@ -28,27 +28,31 @@ class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
         print("Request headers:")
         for key, value in self.request.headers:
             print(f"  {key}: {value}")
-        
+
         # Reset response size counter for new request
         self.response_size = 0
-        
+
         await super().on_request_received()
 
     async def on_response_received(self):
         if self.response:
-            print(f"Response: {self.response.status_code} {self.response.reason_phrase}")
+            print(
+                f"Response: {self.response.status_code} {self.response.reason_phrase}"
+            )
             print("Response headers:")
             if self.response.headers:
                 for key, value in self.response.headers:
                     print(f"  {key}: {value}")
-    
+
     async def on_response_chunk(self, chunk: bytes) -> bytes:
         """Process each response chunk - log size and analyze content."""
         chunk_size = len(chunk)
         self.response_size += chunk_size
-        print(f"  Received chunk: {chunk_size} bytes, total so far: {self.response_size} bytes")        
+        print(
+            f"  Received chunk: {chunk_size} bytes, total so far: {self.response_size} bytes"
+        )
         return chunk
-    
+
     async def on_response_complete(self):
         """Called when response forwarding is complete."""
         print("✅ Response forwarding completed")
@@ -59,7 +63,7 @@ class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
 
 async def main():
     """Run a simple logging forward proxy."""
-    
+
     host = "127.0.0.1"
     port = 8888
 
@@ -76,7 +80,7 @@ async def main():
         state="Ile-de-France",
         locality="Paris",
         organization="Forward Proxy Example",
-        common_name="Forward Proxy CA"
+        common_name="Forward Proxy CA",
     )
 
     server = await start_proxy_server(
@@ -85,7 +89,7 @@ async def main():
         port=port,
         tls_store=tls_store,
     )
-    
+
     async with server:
         try:
             await server.serve_forever()

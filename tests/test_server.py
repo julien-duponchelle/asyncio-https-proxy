@@ -25,10 +25,10 @@ def tls_store():
 
     return TLSStore.generate_ca(
         country="FR",
-        state="Ile-de-France", 
+        state="Ile-de-France",
         locality="Paris",
         organization="Test Org",
-        common_name="Test CA"
+        common_name="Test CA",
     )
 
 

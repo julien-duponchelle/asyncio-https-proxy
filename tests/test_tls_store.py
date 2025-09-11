@@ -14,10 +14,10 @@ def tls_store():
     """Create a fresh TLSStore instance for testing"""
     return TLSStore.generate_ca(
         country="FR",
-        state="Ile-de-France", 
+        state="Ile-de-France",
         locality="Paris",
         organization="Asyncio HTTPS Proxy",
-        common_name="Asyncio HTTPS Proxy CA"
+        common_name="Asyncio HTTPS Proxy CA",
     )
 
 
@@ -132,15 +132,27 @@ def test_generate_cert_copies_ca_certificate_information(tls_store):
     # Get CA certificate attributes
     ca_cert = tls_store._ca[1]
     ca_subject_attrs = {attr.oid: attr.value for attr in ca_cert.subject}
-    
+
     # Get generated certificate attributes
     cert_subject_attrs = {attr.oid: attr.value for attr in cert.subject}
 
     # Verify that the generated certificate copies information from the CA
-    assert cert_subject_attrs[x509.NameOID.COUNTRY_NAME] == ca_subject_attrs[x509.NameOID.COUNTRY_NAME]
-    assert cert_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME] == ca_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME] 
-    assert cert_subject_attrs[x509.NameOID.LOCALITY_NAME] == ca_subject_attrs[x509.NameOID.LOCALITY_NAME]
-    assert cert_subject_attrs[x509.NameOID.ORGANIZATION_NAME] == ca_subject_attrs[x509.NameOID.ORGANIZATION_NAME]
+    assert (
+        cert_subject_attrs[x509.NameOID.COUNTRY_NAME]
+        == ca_subject_attrs[x509.NameOID.COUNTRY_NAME]
+    )
+    assert (
+        cert_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME]
+        == ca_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME]
+    )
+    assert (
+        cert_subject_attrs[x509.NameOID.LOCALITY_NAME]
+        == ca_subject_attrs[x509.NameOID.LOCALITY_NAME]
+    )
+    assert (
+        cert_subject_attrs[x509.NameOID.ORGANIZATION_NAME]
+        == ca_subject_attrs[x509.NameOID.ORGANIZATION_NAME]
+    )
 
     assert cert_subject_attrs[x509.NameOID.ORGANIZATION_NAME] == "Asyncio HTTPS Proxy"
 

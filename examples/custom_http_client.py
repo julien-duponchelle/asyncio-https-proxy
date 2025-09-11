@@ -63,7 +63,7 @@ async def main():
         state="Ile-de-France",
         locality="Paris",
         organization="Example Proxy",
-        common_name="Example Proxy CA"
+        common_name="Example Proxy CA",
     )
 
     server = await start_proxy_server(

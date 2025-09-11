@@ -44,6 +44,11 @@ class BasicProxyHandler(HTTPSProxyHandler):
             async for chunk in response.aiter_bytes():
                 self.write_response(chunk)
 
+    async def on_error(self, error: Exception):
+        """Handle any errors that occur during proxy operation."""
+        print(f"❌ Proxy error: {type(error).__name__}: {error}")
+        await super().on_error(error)
+
 
 async def main():
     """Run a basic HTTPS proxy server."""

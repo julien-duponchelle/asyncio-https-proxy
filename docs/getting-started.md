@@ -85,6 +85,10 @@ class LoggingProxyHandler(HTTPSForwardProxyHandler):
         """Called when response forwarding is complete."""
         print(f"✅ Response complete: {self.response_size} bytes")
         print("---")
+    
+    async def on_error(self, error: Exception):
+        """Called when any error occurs during proxy operation."""
+        print(f"❌ Proxy error: {type(error).__name__}: {error}")
 ```
 
 **Key Benefits of HTTPSForwardProxyHandler:**
@@ -194,6 +198,7 @@ The `HTTPSForwardProxyHandler` has a well-defined lifecycle with automatic forwa
 3. **Response Headers**: `on_response_received()` is called when response headers arrive
 4. **Response Body**: `on_response_chunk()` is called for each piece of response data
 5. **Response Complete**: `on_response_complete()` is called when forwarding finishes
+6. **Error Handling**: `on_error()` is called if any error occurs during any phase
 
 This makes it much easier to get started compared to the lower-level [HTTPSProxyHandler](advanced-usage.md).
 

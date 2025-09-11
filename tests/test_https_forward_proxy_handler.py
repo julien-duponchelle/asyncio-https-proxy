@@ -1,3 +1,4 @@
+import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -439,3 +440,201 @@ class TestHTTPSForwardProxyHandler:
 
                     # Verify completion hook was called despite exception
                     mock_complete.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_error_hook_called_on_ssl_failure(self):
+        """Test that on_error hook is called when SSL connection fails."""
+        handler = HTTPSForwardProxyHandler()
+
+        # Mock request for HTTPS
+        request = HTTPRequest()
+        request.method = "GET"
+        request.scheme = "https"
+        request.host = "example.com"
+        request.port = 443
+        request.path = "/test"
+        request.version = "HTTP/1.1"
+        request.headers = HTTPHeader(b"Host: example.com\r\n\r\n")
+        handler.request = request
+
+        # Mock read_request_body
+        async def mock_read_request_body():
+            return
+            yield
+
+        with patch.object(
+            handler, "read_request_body", return_value=mock_read_request_body()
+        ):
+            with patch.object(
+                handler, "on_error", new_callable=AsyncMock
+            ) as mock_error:
+                ssl_error = ssl.SSLError("SSL certificate verify failed")
+                with patch("asyncio.open_connection", side_effect=ssl_error):
+                    # Should abort request silently after calling hook
+                    await handler.forward_http_request()
+
+                    # Verify error hook was called
+                    mock_error.assert_called_once_with(ssl_error)
+
+    @pytest.mark.asyncio
+    async def test_error_hook_abort(self):
+        """Test that default on_error hook behavior aborts the request."""
+        handler = HTTPSForwardProxyHandler()
+
+        # Mock request for HTTPS
+        request = HTTPRequest()
+        request.method = "GET"
+        request.scheme = "https"
+        request.host = "example.com"
+        request.port = 443
+        request.path = "/test"
+        request.version = "HTTP/1.1"
+        request.headers = HTTPHeader(b"Host: example.com\r\n\r\n")
+        handler.request = request
+
+        # Mock read_request_body
+        async def mock_read_request_body():
+            return
+            yield
+
+        with patch.object(
+            handler, "read_request_body", return_value=mock_read_request_body()
+        ):
+            ssl_error = ssl.SSLError("SSL certificate verify failed")
+            with patch("asyncio.open_connection", side_effect=ssl_error):
+                # Should abort request silently (no exception raised)
+                await handler.forward_http_request()
+
+    @pytest.mark.asyncio
+    async def test_error_hook_not_called_for_http(self):
+        """Test that error hook is not called for HTTP connection errors."""
+        handler = HTTPSForwardProxyHandler()
+
+        # Mock request for HTTP (not HTTPS)
+        request = HTTPRequest()
+        request.method = "GET"
+        request.scheme = "http"
+        request.host = "example.com"
+        request.port = 80
+        request.path = "/test"
+        request.version = "HTTP/1.1"
+        request.headers = HTTPHeader(b"Host: example.com\r\n\r\n")
+        handler.request = request
+
+        # Mock read_request_body
+        async def mock_read_request_body():
+            return
+            yield
+
+        with patch.object(
+            handler, "read_request_body", return_value=mock_read_request_body()
+        ):
+            with patch.object(
+                handler, "on_error", new_callable=AsyncMock
+            ) as mock_error:
+                with patch(
+                    "asyncio.open_connection", side_effect=ConnectionRefusedError
+                ):
+                    # Should raise ConnectionRefusedError, not call error hook for SSL
+                    with pytest.raises(ConnectionRefusedError):
+                        await handler.forward_http_request()
+
+                    # Verify error hook was NOT called (no SSL involved)
+                    mock_error.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_error_hook_allows_custom_handling(self):
+        """Test that error hook allows custom handling like logging."""
+
+        class CustomErrorHandler(HTTPSForwardProxyHandler):
+            def __init__(self):
+                super().__init__()
+                self.errors_logged = []
+
+            async def on_error(self, error: Exception):
+                # Custom handling: log the error
+                self.errors_logged.append(str(error))
+
+        handler = CustomErrorHandler()
+
+        # Mock request for HTTPS
+        request = HTTPRequest()
+        request.method = "GET"
+        request.scheme = "https"
+        request.host = "example.com"
+        request.port = 443
+        request.path = "/test"
+        request.version = "HTTP/1.1"
+        request.headers = HTTPHeader(b"Host: example.com\r\n\r\n")
+        handler.request = request
+
+        # Mock read_request_body
+        async def mock_read_request_body():
+            return
+            yield
+
+        with patch.object(
+            handler, "read_request_body", return_value=mock_read_request_body()
+        ):
+            ssl_error = ssl.SSLError("Custom SSL error")
+            with patch("asyncio.open_connection", side_effect=ssl_error):
+                # Should abort request silently after custom handling
+                await handler.forward_http_request()
+
+                # Verify custom handling occurred
+                assert len(handler.errors_logged) == 1
+                error_str = handler.errors_logged[0]
+                assert "Custom SSL error" in error_str
+
+    @pytest.mark.asyncio
+    async def test_error_hook_called_on_connection_cleanup_failure(self):
+        """Test that error hook is called when connection cleanup fails."""
+        handler = HTTPSForwardProxyHandler()
+
+        # Mock request for HTTPS
+        request = HTTPRequest()
+        request.method = "GET"
+        request.scheme = "https"
+        request.host = "example.com"
+        request.port = 443
+        request.path = "/test"
+        request.version = "HTTP/1.1"
+        request.headers = HTTPHeader(b"Host: example.com\r\n\r\n")
+        handler.request = request
+
+        # Mock read_request_body
+        async def mock_read_request_body():
+            return
+            yield
+
+        # Mock upstream connection
+        mock_reader = AsyncMock()
+        mock_writer = AsyncMock()
+
+        with patch.object(
+            handler, "read_request_body", return_value=mock_read_request_body()
+        ):
+            with patch(
+                "asyncio.open_connection", return_value=(mock_reader, mock_writer)
+            ):
+                with patch.object(
+                    handler, "_read_and_forward_response", new_callable=AsyncMock
+                ):
+                    with patch.object(
+                        handler, "on_error", new_callable=AsyncMock
+                    ) as mock_error:
+                        # Make wait_closed raise an SSL error during cleanup
+                        cleanup_ssl_error = ssl.SSLError(
+                            "APPLICATION_DATA_AFTER_CLOSE_NOTIFY"
+                        )
+                        mock_writer.wait_closed.side_effect = cleanup_ssl_error
+
+                        # Should complete successfully despite cleanup error
+                        await handler.forward_http_request()
+
+                        # Verify error hook was called for cleanup error
+                        mock_error.assert_called_once_with(cleanup_ssl_error)
+
+                        # Verify connection was attempted to be closed
+                        mock_writer.close.assert_called_once()
+                        mock_writer.wait_closed.assert_called_once()

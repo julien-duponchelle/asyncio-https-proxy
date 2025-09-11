@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from contextlib import closing
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
 from asyncio_https_proxy.http_request import HTTPRequest
@@ -55,31 +56,57 @@ async def start_proxy_server(
         handler = handler_builder()
 
         async def process_client_connection():
-            with closing(writer):
-                initial_request = await _parse_request(reader)
+            try:
+                with closing(writer):
+                    initial_request = await _parse_request(reader)
 
-                handler.client_reader = reader
-                handler.client_writer = writer
+                    handler.client_reader = reader
+                    handler.client_writer = writer
 
-                if initial_request.method == "CONNECT":
-                    handler.client_writer.write(
-                        b"HTTP/1.1 200 Connection Established\r\n\r\n"
-                    )
-                    await handler.client_writer.drain()
-                    await handler.client_writer.start_tls(
-                        tls_store.get_ssl_context(initial_request.host),
-                        server_hostname=initial_request.host,
-                    )
-                    # Re-parse the request after TLS is established
-                    request = await _parse_request(handler.client_reader)
-                    request.port = initial_request.port
-                    request.scheme = "https"
-                    handler.request = request
-                else:
-                    handler.request = initial_request
-                await handler.on_client_connected()
-                await handler.on_request_received()
+                    if initial_request.method == "CONNECT":
+                        handler.client_writer.write(
+                            b"HTTP/1.1 200 Connection Established\r\n\r\n"
+                        )
+                        await handler.client_writer.drain()
+                        try:
+                            await handler.client_writer.start_tls(
+                                tls_store.get_ssl_context(initial_request.host),
+                                server_hostname=initial_request.host,
+                            )
+                        except (
+                            ssl.SSLError,
+                            ConnectionResetError,
+                            OSError,
+                        ) as ssl_error:
+                            # Call unified error hook for custom handling (logging, etc.)
+                            await handler.on_error(ssl_error)
+                            # Always abort the connection since SSL handshake failed
+                            return
 
-        asyncio.create_task(process_client_connection())
+                        # Re-parse the request after TLS is established
+                        request = await _parse_request(handler.client_reader)
+                        request.port = initial_request.port
+                        request.scheme = "https"
+                        handler.request = request
+                    else:
+                        handler.request = initial_request
+                    await handler.on_client_connected()
+                    await handler.on_request_received()
+            except Exception as conn_error:
+                # Call unified error hook for any unhandled errors
+                await handler.on_error(conn_error)
+                # Continue silently - connection will be closed
+
+        # Create task with proper exception handling
+        task = asyncio.create_task(process_client_connection())
+
+        # Add done callback to handle any unhandled exceptions
+        def handle_task_exception(task):
+            if task.exception() is not None:
+                # Exception was already handled by the try/catch above,
+                # but this prevents "Task exception was never retrieved" warnings
+                pass
+
+        task.add_done_callback(handle_task_exception)
 
     return await asyncio.start_server(create_connection_handler, host=host, port=port)

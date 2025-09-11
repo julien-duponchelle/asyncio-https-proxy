@@ -1,9 +1,11 @@
 import asyncio
-import pytest
 import ssl
 import tempfile
-from asyncio_https_proxy.server import start_proxy_server
+
+import pytest
+
 from asyncio_https_proxy.https_proxy_handler import HTTPSProxyHandler
+from asyncio_https_proxy.server import start_proxy_server
 
 
 class MockProxyHandler(HTTPSProxyHandler):
@@ -12,11 +14,16 @@ class MockProxyHandler(HTTPSProxyHandler):
     def __init__(self):
         self.connected_calls = []
         self.requests = []
+        self.errors = []
 
     async def on_client_connected(self):
         """Override to track connections and requests"""
         self.connected_calls.append(True)
         self.requests.append(self.request)
+
+    async def on_error(self, error: Exception):
+        """Override to track all errors"""
+        self.errors.append(error)
 
 
 @pytest.fixture(scope="module")
@@ -250,6 +257,47 @@ async def test_proxy_handles_client_disconnect(tls_store):
         await asyncio.sleep(0.1)
 
         # Handler should not have been called since no data was sent
+        assert len(handler.connected_calls) == 0
+        assert len(handler.requests) == 0
+
+    finally:
+        server.close()
+        await server.wait_closed()
+
+
+@pytest.mark.asyncio
+async def test_error_hook_called_on_client_connection_parse_error(tls_store):
+    """Test that on_error hook is called when request parsing fails."""
+    handler = MockProxyHandler()
+
+    def handler_builder():
+        return handler
+
+    server = await start_proxy_server(
+        handler_builder=handler_builder,
+        host="127.0.0.1",
+        port=0,
+        tls_store=tls_store,
+    )
+
+    try:
+        server_host, server_port = server.sockets[0].getsockname()
+
+        # Connect but immediately close without sending data
+        reader, writer = await asyncio.open_connection(server_host, server_port)
+        writer.close()
+        await writer.wait_closed()
+
+        # Give the server time to process the connection error
+        await asyncio.sleep(0.1)
+
+        # Verify the error hook was called
+        assert len(handler.errors) == 1
+        error = handler.errors[0]
+        assert isinstance(error, ConnectionError)
+        assert "Client disconnected before sending request line" in str(error)
+
+        # Handler should not have been called for successful connection
         assert len(handler.connected_calls) == 0
         assert len(handler.requests) == 0
 

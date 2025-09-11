@@ -73,12 +73,18 @@ class HTTPSForwardProxyHandler(HTTPSProxyHandler):
             if self.request.scheme == "https":
                 # Create SSL context for HTTPS connections
                 ssl_context = ssl.create_default_context()
-                (
-                    self.upstream_reader,
-                    self.upstream_writer,
-                ) = await asyncio.open_connection(
-                    self.request.host, port, ssl=ssl_context
-                )
+                try:
+                    (
+                        self.upstream_reader,
+                        self.upstream_writer,
+                    ) = await asyncio.open_connection(
+                        self.request.host, port, ssl=ssl_context
+                    )
+                except ssl.SSLError as ssl_error:
+                    # Call unified error hook for custom handling (logging, etc.)
+                    await self.on_error(ssl_error)
+                    # Always abort the request since SSL connection failed
+                    return
             else:
                 (
                     self.upstream_reader,
@@ -115,7 +121,12 @@ class HTTPSForwardProxyHandler(HTTPSProxyHandler):
             # TODO: Handle keep alive
             if self.upstream_writer:
                 self.upstream_writer.close()
-                await self.upstream_writer.wait_closed()
+                try:
+                    await self.upstream_writer.wait_closed()
+                except (ssl.SSLError, ConnectionResetError, OSError) as close_error:
+                    # Call unified error hook for cleanup errors
+                    await self.on_error(close_error)
+                    # Continue cleanup silently - connection is being closed anyway
 
     async def _read_and_forward_response(self):
         """Read the response from upstream and forward it to the client."""

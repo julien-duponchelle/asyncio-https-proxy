@@ -40,36 +40,11 @@ Called when a client connects and sends a request. This is where you implement y
 ### `on_request_received()` 
 Called after the request is fully parsed. Use for logging or request inspection.
 
+### `on_error(error: Exception)`
+Called when any error occurs during proxy operation. Override this method to implement custom error handling, logging, metrics collection, etc.
+
 ### Helper Methods
 
 - `self.read_request_body()` - Async generator for request body chunks
 - `self.write_response(data)` - Write response data to client
 - `self.flush_response()` - Flush response data to client
-
-## Error Handling Best Practices
-
-```python
-async def on_client_connected(self):
-    try:
-        await self._handle_request()
-    except httpx.ConnectTimeout:
-        await self._send_error(504, "Gateway Timeout")
-    except httpx.ConnectError:
-        await self._send_error(502, "Bad Gateway") 
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        await self._send_error(500, "Internal Server Error")
-
-async def _send_error(self, code: int, message: str):
-    """Send standardized error response."""
-    body = f"Proxy Error: {code} {message}".encode()
-    response = (
-        f"HTTP/1.1 {code} {message}\\r\\n"
-        f"Content-Type: text/plain\\r\\n"
-        f"Content-Length: {len(body)}\\r\\n"
-        f"\\r\\n"
-    ).encode() + body
-    
-    self.write_response(response)
-    await self.flush_response()
-```

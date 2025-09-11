@@ -37,6 +37,18 @@ class HTTPSProxyHandler:
         """
         pass
 
+    async def on_error(self, error: Exception):
+        """
+        Called when any error occurs during proxy operation.
+
+        Args:
+            error: The error that occurred
+
+        Override this method to implement custom error handling
+        (logging, metrics, error responses, etc.).
+        """
+        pass  # Default: do nothing
+
     async def read_request_body(self) -> AsyncIterator[bytes]:
         """
         Read the request body from the client. This is an async generator that yields chunks of the request body.

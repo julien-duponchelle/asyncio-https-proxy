@@ -58,6 +58,11 @@ class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
         print(f"Request: {self.request.method} {self.request.url()}")
         await super().on_request_received()
 
+    async def on_error(self, error: Exception):
+        """Handle any errors that occur during proxy operation."""
+        print(f"❌ Proxy error: {type(error).__name__}: {error}")
+        await super().on_error(error)
+
 
 async def main():
     """Run a proxy with persistent CA."""

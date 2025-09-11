@@ -2,7 +2,7 @@ import datetime
 import ssl
 import tempfile
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization

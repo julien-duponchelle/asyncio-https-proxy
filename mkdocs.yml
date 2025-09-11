@@ -33,7 +33,8 @@ nav:
   - How It Works: how-it-works.md
   - Advanced Usage: advanced-usage.md
   - How to:
-    - Custom CA: custom-ca.md
+      - Custom CA: how-to/custom-ca.md
+      - Firefox: how-to/firefox
   - API Reference: reference/index.md
   - Development: development.md
   - FAQ: faq.md

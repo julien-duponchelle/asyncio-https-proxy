@@ -113,12 +113,16 @@ class TLSStore:
         self, domain
     ) -> tuple[ec.EllipticCurvePrivateKey, x509.Certificate]:
         ee_key = ec.generate_private_key(ec.SECP256R1())
+        
+        ca_subject = self._ca[1].subject
+        ca_attrs = {attr.oid: attr.value for attr in ca_subject}
+        
         subject = x509.Name(
             [
-                x509.NameAttribute(NameOID.COUNTRY_NAME, "FR"),
-                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Ile-de-France"),
-                x509.NameAttribute(NameOID.LOCALITY_NAME, "Paris"),
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Asyncio HTTPS Proxy"),
+                x509.NameAttribute(NameOID.COUNTRY_NAME, ca_attrs.get(NameOID.COUNTRY_NAME, "US")),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, ca_attrs.get(NameOID.STATE_OR_PROVINCE_NAME, "Unknown")),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, ca_attrs.get(NameOID.LOCALITY_NAME, "Unknown")),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, ca_attrs.get(NameOID.ORGANIZATION_NAME, "Unknown")),
             ]
         )
         ee_cert = (

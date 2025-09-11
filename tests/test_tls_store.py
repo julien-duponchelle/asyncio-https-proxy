@@ -124,6 +124,27 @@ def test_generate_cert_creates_valid_certificate(tls_store):
     assert cert.issuer == tls_store._ca[1].subject
 
 
+def test_generate_cert_copies_ca_certificate_information(tls_store):
+    """Test that _generate_cert copies certificate information from the root CA"""
+    domain = "example.com"
+    _, cert = tls_store._generate_cert(domain)
+
+    # Get CA certificate attributes
+    ca_cert = tls_store._ca[1]
+    ca_subject_attrs = {attr.oid: attr.value for attr in ca_cert.subject}
+    
+    # Get generated certificate attributes
+    cert_subject_attrs = {attr.oid: attr.value for attr in cert.subject}
+
+    # Verify that the generated certificate copies information from the CA
+    assert cert_subject_attrs[x509.NameOID.COUNTRY_NAME] == ca_subject_attrs[x509.NameOID.COUNTRY_NAME]
+    assert cert_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME] == ca_subject_attrs[x509.NameOID.STATE_OR_PROVINCE_NAME] 
+    assert cert_subject_attrs[x509.NameOID.LOCALITY_NAME] == ca_subject_attrs[x509.NameOID.LOCALITY_NAME]
+    assert cert_subject_attrs[x509.NameOID.ORGANIZATION_NAME] == ca_subject_attrs[x509.NameOID.ORGANIZATION_NAME]
+
+    assert cert_subject_attrs[x509.NameOID.ORGANIZATION_NAME] == "Asyncio HTTPS Proxy"
+
+
 def test_get_ssl_context_returns_valid_context(tls_store):
     """Test that get_ssl_context returns a valid SSL context"""
     domain = "test.example.com"

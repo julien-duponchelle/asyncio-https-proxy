@@ -81,7 +81,7 @@ else:
 
 ### Persistent CA Example
 
-For a complete example of creating and reusing a CA across multiple proxy runs, see [`examples/persistent_ca_usage.py`](../examples/persistent_ca_usage.py). This example demonstrates:
+For a complete example of creating and reusing a CA across multiple proxy runs, see [`examples/persistent_ca_usage.py`](.https://github.com/julien-duponchelle/asyncio-https-proxy/blob/main/examples/persistent_ca_usage.py). This example demonstrates:
 
 - Generating a CA and saving it to disk if it doesn't exist
 - Loading an existing CA from disk on subsequent runs
@@ -110,3 +110,7 @@ To use a custom CA bundle with curl, you can use the `--cacert` option to specif
 ```console
 curl --cacert ca_certificate.pem --proxy http://127.0.0.1:8888 https://httpbin.org/get
 ```
+
+### Firefox
+
+See the documentation [here](../how-to/firefox/index.md)

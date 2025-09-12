@@ -1,4 +1,5 @@
 import ssl
+import unittest.mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -181,40 +182,25 @@ class TestHTTPSForwardProxyHandler:
         handler.upstream_reader.readline.side_effect = [
             b"5\r\n",  # chunk size
             b"0\r\n",  # end chunk
-            b"\r\n",  # final CRLF
+            b"\r\n",  # final CRLF after zero chunk (no trailers)
         ]
         handler.upstream_reader.read.side_effect = [
-            b"Hello\r\n"  # chunk data + CRLF
+            b"Hello",  # chunk data (5 bytes)
+            b"\r\n",  # trailing CRLF after chunk data
         ]
 
         with patch.object(handler, "write_response") as mock_write:
             with patch.object(handler, "flush_response", new_callable=AsyncMock):
                 await handler._forward_response_body()
 
-                # Verify chunked data was forwarded
-                mock_write.assert_any_call(b"5\r\n")
-                mock_write.assert_any_call(b"Hello\r\n")
-                mock_write.assert_any_call(b"0\r\n")
-
-    @pytest.mark.asyncio
-    async def test_read_response_body(self):
-        """Test reading response body for modification."""
-        handler = HTTPSForwardProxyHandler()
-
-        # Mock response with Content-Length
-        handler.response = HTTPResponse()
-        handler.response.headers = HTTPHeader(b"Content-Length: 11\r\n\r\n")
-
-        # Mock upstream reader
-        handler.upstream_reader = AsyncMock()
-        handler.upstream_reader.read.side_effect = [b"Hello", b" World", b""]
-
-        # Collect chunks
-        chunks = []
-        async for chunk in handler.read_response_body():
-            chunks.append(chunk)
-
-        assert chunks == [b"Hello", b" World"]
+                # Verify proper chunked format was sent: size\r\ndata\r\n0\r\n\r\n
+                expected_calls = [
+                    unittest.mock.call(b"5\r\n"),  # chunk size
+                    unittest.mock.call(b"Hello"),  # chunk data
+                    unittest.mock.call(b"\r\n"),  # chunk trailing CRLF
+                    unittest.mock.call(b"0\r\n\r\n"),  # final zero chunk
+                ]
+                mock_write.assert_has_calls(expected_calls)
 
     @pytest.mark.asyncio
     async def test_error_handling_connection_failed(self):
@@ -377,21 +363,20 @@ class TestHTTPSForwardProxyHandler:
     @pytest.mark.asyncio
     async def test_chunked_response_only_calls_hook_for_data_chunks(self):
         """Test that chunked responses only call hook for actual data, not protocol overhead."""
+        from asyncio_https_proxy.chunked_encoding import forward_chunked_response
+
         handler = HTTPSForwardProxyHandler()
         handler.upstream_reader = AsyncMock()
 
-        # Mock response with chunked encoding
-        handler.response = HTTPResponse()
-        handler.response.headers = HTTPHeader(b"Transfer-Encoding: chunked\r\n\r\n")
-
-        # Mock chunked data: "5\r\nHello\r\n0\r\n\r\n"
+        # Mock chunked data properly
         handler.upstream_reader.readline.side_effect = [
             b"5\r\n",  # chunk size
             b"0\r\n",  # end chunk
-            b"\r\n",  # final CRLF
+            b"\r\n",  # final CRLF after zero chunk (no trailers)
         ]
         handler.upstream_reader.read.side_effect = [
-            b"Hello\r\n"  # chunk data + CRLF
+            b"Hello",  # chunk data (5 bytes)
+            b"\r\n",  # trailing CRLF after chunk data
         ]
 
         # Track chunk calls
@@ -405,7 +390,11 @@ class TestHTTPSForwardProxyHandler:
         handler.on_response_chunk = mock_on_response_chunk
 
         with patch.object(handler, "write_response"):
-            await handler._forward_chunked_response()
+            await forward_chunked_response(
+                handler.upstream_reader,
+                handler.write_response,
+                handler.on_response_chunk,
+            )
 
             # Verify only actual data was passed to hook, not protocol overhead
             assert chunks_received == [b"Hello"]

@@ -1,7 +1,7 @@
 import asyncio
 import ssl
-from typing import AsyncIterator
 
+from .chunked_encoding import forward_chunked_response
 from .http_response import HTTPResponse
 from .https_proxy_handler import HTTPSProxyHandler
 
@@ -203,7 +203,11 @@ class HTTPSForwardProxyHandler(HTTPSProxyHandler):
                     transfer_encoding = self.response.headers.first("Transfer-Encoding")
 
                 if transfer_encoding and "chunked" in transfer_encoding.lower():
-                    await self._forward_chunked_response()
+                    await forward_chunked_response(
+                        self.upstream_reader,
+                        self.write_response,
+                        self.on_response_chunk,
+                    )
                 else:
                     # Read until EOF
                     while True:
@@ -222,84 +226,3 @@ class HTTPSForwardProxyHandler(HTTPSProxyHandler):
             if not self._response_complete:
                 self._response_complete = True
                 await self.on_response_complete()
-
-    async def _forward_chunked_response(self):
-        """Forward chunked response data."""
-
-        if self.upstream_reader is None:
-            return
-
-        while True:
-            # Read chunk size line
-            chunk_size_line = await self.upstream_reader.readline()
-            self.write_response(chunk_size_line)
-
-            # Parse chunk size
-            try:
-                chunk_size = int(chunk_size_line.decode().split(";")[0], 16)
-            except (ValueError, UnicodeDecodeError):
-                break
-
-            if chunk_size == 0:
-                # Read trailers until empty line
-                while True:
-                    trailer = await self.upstream_reader.readline()
-                    self.write_response(trailer)
-                    if trailer == b"\r\n":
-                        break
-                break
-
-            # Read chunk data + CRLF
-            chunk_data_with_crlf = await self.upstream_reader.read(chunk_size + 2)
-            if len(chunk_data_with_crlf) >= 2:
-                # Separate actual data from CRLF
-                chunk_data = chunk_data_with_crlf[:-2]  # Remove CRLF
-                crlf = chunk_data_with_crlf[-2:]  # Extract CRLF
-
-                # Process chunk data through hook
-                processed_chunk = await self.on_response_chunk(chunk_data)
-                if processed_chunk is not None:
-                    # Write the processed data + CRLF
-                    self.write_response(processed_chunk + crlf)
-                else:
-                    # If chunk was filtered out, we still need to write CRLF for protocol compliance
-                    self.write_response(crlf)
-            else:
-                # Handle edge case where we didn't get enough data
-                self.write_response(chunk_data_with_crlf)
-
-    async def read_response_body(self) -> AsyncIterator[bytes]:
-        """
-        Read the response body from the upstream server.
-
-        This method can be called from on_response_received() to read and potentially
-        modify the response body before it's forwarded to the client.
-
-        Yields:
-            Chunks of the response body as bytes.
-        """
-        if not self.upstream_reader or not self.response:
-            return
-
-        content_length = None
-        if self.response.headers:
-            content_length_header = self.response.headers.first("Content-Length")
-            if content_length_header:
-                content_length = int(content_length_header)
-
-        if content_length is not None:
-            remaining = content_length
-            while remaining > 0:
-                chunk_size = min(remaining, MAX_CHUNK_SIZE)
-                chunk = await self.upstream_reader.read(chunk_size)
-                if not chunk:
-                    break
-                yield chunk
-                remaining -= len(chunk)
-        else:
-            # Read until EOF (for non-chunked responses without Content-Length)
-            while True:
-                chunk = await self.upstream_reader.read(MAX_CHUNK_SIZE)
-                if not chunk:
-                    break
-                yield chunk

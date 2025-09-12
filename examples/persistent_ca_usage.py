@@ -50,6 +50,10 @@ def get_or_create_ca():
 class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
     """Example forward proxy handler with logging."""
 
+    def __init__(self):
+        super().__init__()
+        self.response_size = 0
+
     async def on_client_connected(self):
         print(f"Client connected: {self.request}")
         await super().on_client_connected()
@@ -62,6 +66,15 @@ class LoggingForwardProxyHandler(HTTPSForwardProxyHandler):
         """Handle any errors that occur during proxy operation."""
         print(f"❌ Proxy error: {type(error).__name__}: {error}")
         await super().on_error(error)
+
+    async def on_response_chunk(self, chunk: bytes) -> bytes:
+        """Process each response chunk - log size and analyze content."""
+        chunk_size = len(chunk)
+        self.response_size += chunk_size
+        print(
+            f"  Received chunk: {chunk_size} bytes, total so far: {self.response_size} bytes"
+        )
+        return chunk
 
 
 async def main():

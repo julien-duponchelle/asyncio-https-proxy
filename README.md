@@ -34,3 +34,7 @@ It's a fundation layer for building your own proxy-based tools.
 ## Documentation 
 
 Document is available here: https://asyncio-https-proxy.readthedocs.io/en/latest/
+
+## License
+
+Apache-2.0

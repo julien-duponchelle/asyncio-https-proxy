@@ -21,7 +21,7 @@ jobs:
           enable-cache: true
 
       - name: Set version
-        run: uv version ${{ github.ref_name }}
+        run: uv version ${{ github.event.release.name }}
 
       - name: Build package
         run: uv build
